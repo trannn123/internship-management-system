@@ -8,11 +8,13 @@ import jakarta.ws.rs.core.MediaType;
 import cit.internship.dto.UserRequest;
 import jakarta.ws.rs.core.Response;
 import jakarta.validation.Valid;
+import io.quarkus.security.Authenticated;
 
 import java.util.List;
 
 @Path("/api/users")
 @Produces(MediaType.APPLICATION_JSON)
+@Authenticated
 public class UserController {
 
     @Inject
