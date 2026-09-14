@@ -19,6 +19,10 @@ public class UserService {
         return userRepository.listAll();
     }
 
+    public User getUserByKeycloakUserId(String keycloakUserId) {
+        return userRepository.find("keycloakUserId", keycloakUserId).firstResult();
+    }
+
     public User getUserById(Long id) {
         return userRepository.findById(id);
     }
