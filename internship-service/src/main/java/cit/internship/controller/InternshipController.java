@@ -9,6 +9,9 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.Authenticated;
+import cit.internship.dto.MeResponse;
+import cit.internship.client.UserServiceClient;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.util.List;
 
@@ -21,6 +24,10 @@ public class InternshipController {
     @Inject
     InternshipService internshipService;
 
+    @Inject
+    @RestClient
+    UserServiceClient userServiceClient;
+
     @GET
     public List<Internship> getAllInternships() {
         return internshipService.getAllInternships();
@@ -29,7 +36,6 @@ public class InternshipController {
     @GET
     @Path("/{id}")
     public Response getInternshipById(@PathParam("id") Long id) {
-
         Internship internship = internshipService.getInternshipById(id);
 
         if (internship == null) {
@@ -41,11 +47,17 @@ public class InternshipController {
 
     @POST
     public Response createInternship(@Valid InternshipRequest request) {
-
         Internship internship = internshipService.createInternship(request);
 
         return Response.status(Response.Status.CREATED)
                 .entity(internship)
                 .build();
+    }
+
+    @GET
+    @Path("/me-test")
+    public Response testCurrentUser() {
+        MeResponse response = userServiceClient.getCurrentUser();
+        return Response.ok(response).build();
     }
 }
