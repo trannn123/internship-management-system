@@ -47,22 +47,6 @@ public class InternshipController {
         return Response.ok(internship).build();
     }
 
-    private Long extractStudentId(MeResponse me) {
-        if (!(me.getProfile() instanceof Map)) {
-            throw new IllegalArgumentException("Invalid student profile");
-        }
-
-        Map<?, ?> profile = (Map<?, ?>) me.getProfile();
-
-        Object id = profile.get("id");
-
-        if (!(id instanceof Number)) {
-            throw new IllegalArgumentException("Student ID not found");
-        }
-
-        return ((Number) id).longValue();
-    }
-
     @POST
     @RolesAllowed("STUDENT")
     public Response createInternship(@Valid InternshipRequest request) {
@@ -75,22 +59,6 @@ public class InternshipController {
         return Response.status(Response.Status.CREATED)
                 .entity(internship)
                 .build();
-    }
-
-    private Long extractCompanyId(MeResponse me) {
-        if (!(me.getProfile() instanceof Map)) {
-            throw new IllegalArgumentException("Invalid company profile");
-        }
-
-        Map<?, ?> profile = (Map<?, ?>) me.getProfile();
-
-        Object id = profile.get("id");
-
-        if (!(id instanceof Number)) {
-            throw new IllegalArgumentException("Company ID not found");
-        }
-
-        return ((Number) id).longValue();
     }
 
     @PUT
@@ -109,35 +77,12 @@ public class InternshipController {
         return Response.ok(internship).build();
     }
 
-    private Long extractLecturerId(MeResponse me) {
-        if (!(me.getProfile() instanceof Map)) {
-            throw new IllegalArgumentException("Invalid lecturer profile");
-        }
-
-        Map<?, ?> profile = (Map<?, ?>) me.getProfile();
-
-        Object id = profile.get("id");
-
-        if (!(id instanceof Number)) {
-            throw new IllegalArgumentException("Lecturer ID not found");
-        }
-
-        return ((Number) id).longValue();
-    }
-
     @PUT
     @Path("/{id}/approve-lecturer")
     @RolesAllowed("LECTURER")
     public Response approveByLecturer(@PathParam("id") Long id) {
-        MeResponse me = currentUserService.getCurrentUser();
 
-        if (me == null || me.getProfile() == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Lecturer profile not found")
-                    .build();
-        }
-
-        Long lecturerId = extractLecturerId(me);
+        Long lecturerId = currentUserService.getUserId();
 
         Internship internship =
                 internshipService.approveByLecturer(id, lecturerId);
