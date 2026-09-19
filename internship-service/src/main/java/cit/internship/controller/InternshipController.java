@@ -2,6 +2,7 @@ package cit.internship.controller;
 
 import cit.internship.dto.InternshipRequest;
 import cit.internship.entity.Internship;
+import cit.internship.service.CurrentUserService;
 import cit.internship.service.InternshipService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
@@ -27,8 +28,7 @@ public class InternshipController {
     InternshipService internshipService;
 
     @Inject
-    @RestClient
-    UserServiceClient userServiceClient;
+    CurrentUserService currentUserService;
 
     @GET
     public List<Internship> getAllInternships() {
@@ -66,15 +66,8 @@ public class InternshipController {
     @POST
     @RolesAllowed("STUDENT")
     public Response createInternship(@Valid InternshipRequest request) {
-        MeResponse me = userServiceClient.getCurrentUser();
 
-        if (me == null || me.getProfile() == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Student profile not found")
-                    .build();
-        }
-
-        Long studentId = extractStudentId(me);
+        Long studentId = currentUserService.getUserId();
 
         Internship internship =
                 internshipService.createInternship(request, studentId);
@@ -104,15 +97,8 @@ public class InternshipController {
     @Path("/{id}/approve-company")
     @RolesAllowed("COMPANY")
     public Response approveByCompany(@PathParam("id") Long id) {
-        MeResponse me = userServiceClient.getCurrentUser();
 
-        if (me == null || me.getProfile() == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Company profile not found")
-                    .build();
-        }
-
-        Long companyId = extractCompanyId(me);
+        Long companyId = currentUserService.getUserId();
 
         Internship internship = internshipService.approveByCompany(id, companyId);
 
@@ -143,7 +129,7 @@ public class InternshipController {
     @Path("/{id}/approve-lecturer")
     @RolesAllowed("LECTURER")
     public Response approveByLecturer(@PathParam("id") Long id) {
-        MeResponse me = userServiceClient.getCurrentUser();
+        MeResponse me = currentUserService.getCurrentUser();
 
         if (me == null || me.getProfile() == null) {
             return Response.status(Response.Status.NOT_FOUND)
@@ -167,15 +153,8 @@ public class InternshipController {
     @Path("/me")
     @RolesAllowed("STUDENT")
     public Response getMyInternships() {
-        MeResponse me = userServiceClient.getCurrentUser();
 
-        if (me == null || me.getProfile() == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                .entity("Student profile not found")
-                .build();
-        }
-
-        Long studentId = extractStudentId(me);
+        Long studentId = currentUserService.getUserId();
 
         List<Internship> internships = internshipService.getInternshipByStudentId(studentId);
 
