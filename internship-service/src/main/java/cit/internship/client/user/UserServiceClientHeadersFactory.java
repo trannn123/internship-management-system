@@ -1,4 +1,4 @@
-package cit.internship.client;
+package cit.internship.client.user;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.ws.rs.core.MultivaluedHashMap;

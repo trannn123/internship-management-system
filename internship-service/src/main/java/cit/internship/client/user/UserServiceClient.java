@@ -1,4 +1,4 @@
-package cit.internship.client;
+package cit.internship.client.user;
 
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
