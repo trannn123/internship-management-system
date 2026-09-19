@@ -234,4 +234,26 @@ public class InternshipService {
         return internship;
     }
 
+    public boolean isCompanyOwner(Long internshipId, Long companyId) {
+        Internship internship = internshipRepository.findById(internshipId);
+
+        if (internship == null) {
+            return false;
+        }
+
+        return internship.getCompanyId() != null
+                && internship.getCompanyId().equals(companyId);
+    }
+
+    public boolean isStudentOwner(Long internshipId, Long studentId) {
+        Internship internship = internshipRepository.findById(internshipId);
+
+        if (internship == null) {
+            return false;
+        }
+
+        return internship.getStudentId() != null
+                && internship.getStudentId().equals(studentId);
+    }
+
 }
