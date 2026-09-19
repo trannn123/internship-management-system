@@ -25,11 +25,11 @@ public class InternshipService {
     }
 
     @Transactional
-    public Internship createInternship(InternshipRequest request) {
+    public Internship createInternship(InternshipRequest request, Long studentId) {
 
         Internship internship = new Internship();
 
-        internship.setStudentId(request.getStudentId());
+        internship.setStudentId(studentId);
         internship.setCompanyId(request.getCompanyId());
         internship.setLecturerId(request.getLecturerId());
         internship.setPosition(request.getPosition());
@@ -44,6 +44,46 @@ public class InternshipService {
         }
 
         internshipRepository.persist(internship);
+
+        return internship;
+    }
+
+    @Transactional
+    public Internship approveByCompany(Long id, Long companyId) {
+        Internship internship = internshipRepository.findById(id);
+
+        if (internship == null) {
+            return null;
+        }
+
+        if (internship.getStatus() != InternshipStatus.PENDING_COMPANY) {
+            throw new IllegalArgumentException(
+                    "Internship is not waiting for company approval"
+            );
+        }
+
+        internship.setCompanyId(companyId);
+        internship.setStatus(InternshipStatus.PENDING_LECTURER);
+
+        return internship;
+    }
+
+    @Transactional
+    public Internship approveByLecturer(Long id, Long lecturerId) {
+        Internship internship = internshipRepository.findById(id);
+
+        if (internship == null) {
+            return null;
+        }
+
+        if (internship.getStatus() != InternshipStatus.PENDING_LECTURER) {
+            throw new IllegalArgumentException(
+                    "Internship is not waiting for lecturer approval"
+            );
+        }
+
+        internship.setLecturerId(lecturerId);
+        internship.setStatus(InternshipStatus.APPROVED);
 
         return internship;
     }
