@@ -110,6 +110,32 @@ public class InternshipService {
     }
 
     @Transactional
+    public Internship rejectByCompany(Long id, Long companyId) {
+        Internship internship = internshipRepository.findById(id);
+
+        if (internship == null) {
+            return null;
+        }
+
+        if (internship.getStatus() != InternshipStatus.PENDING_COMPANY) {
+            throw new IllegalArgumentException(
+                    "Internship is not waiting for company approval"
+            );
+        }
+
+        if (internship.getCompanyId() != null
+                && !internship.getCompanyId().equals(companyId)) {
+            throw new IllegalArgumentException(
+                    "You do not have permission to reject this internship"
+            );
+        }
+
+        internship.setStatus(InternshipStatus.REJECTED_COMPANY);
+
+        return internship;
+    }
+
+    @Transactional
     public Internship approveByLecturer(Long id, Long lecturerId) {
         Internship internship = internshipRepository.findById(id);
 
@@ -124,8 +150,88 @@ public class InternshipService {
         }
 
         internship.setLecturerId(lecturerId);
-        internship.setStatus(InternshipStatus.APPROVED);
+        internship.setStatus(InternshipStatus.IN_PROGRESS);
 
         return internship;
     }
+
+    @Transactional
+    public Internship rejectByLecturer(Long id, Long lecturerId) {
+        Internship internship = internshipRepository.findById(id);
+
+        if (internship == null) {
+            return null;
+        }
+
+        if (internship.getStatus() != InternshipStatus.PENDING_LECTURER) {
+            throw new IllegalArgumentException(
+                    "Internship is not waiting for lecturer approval"
+            );
+        }
+
+        if (internship.getLecturerId() != null
+                && !internship.getLecturerId().equals(lecturerId)) {
+            throw new IllegalArgumentException(
+                    "You do not have permission to reject this internship"
+            );
+        }
+
+        internship.setLecturerId(lecturerId);
+        internship.setStatus(InternshipStatus.REJECTED_LECTURER);
+
+        return internship;
+    }
+
+    @Transactional
+    public Internship completeByCompany(Long id, Long companyId) {
+        Internship internship = internshipRepository.findById(id);
+
+        if (internship == null) {
+            return null;
+        }
+
+        if (internship.getStatus() != InternshipStatus.IN_PROGRESS) {
+            throw new IllegalArgumentException(
+                    "Internship is not in progress"
+            );
+        }
+
+        if (internship.getCompanyId() == null
+                || !internship.getCompanyId().equals(companyId)) {
+            throw new IllegalArgumentException(
+                    "You do not have permission to complete this internship"
+            );
+        }
+
+        internship.setStatus(InternshipStatus.COMPLETED_COMPANY);
+
+        return internship;
+    }
+
+    @Transactional
+    public Internship completeByLecturer(Long id, Long lecturerId) {
+        Internship internship = internshipRepository.findById(id);
+
+        if (internship == null) {
+            return null;
+        }
+
+        if (internship.getStatus() != InternshipStatus.COMPLETED_COMPANY) {
+            throw new IllegalArgumentException(
+                    "Internship is not completed by company yet"
+            );
+        }
+
+        if (internship.getLecturerId() == null
+                || !internship.getLecturerId().equals(lecturerId)) {
+            throw new IllegalArgumentException(
+                    "You do not have permission to complete this internship"
+            );
+        }
+
+        internship.setStatus(InternshipStatus.COMPLETED_LECTURER);
+
+        return internship;
+    }
+
 }

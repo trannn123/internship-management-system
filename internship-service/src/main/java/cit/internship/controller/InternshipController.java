@@ -11,11 +11,6 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.Authenticated;
-import cit.internship.dto.MeResponse;
-import cit.internship.client.user.UserServiceClient;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +21,6 @@ import java.util.Map;
 @Authenticated
 public class InternshipController {
 
-    private static final Logger log = LoggerFactory.getLogger(InternshipController.class);
     @Inject
     InternshipService internshipService;
 
@@ -100,6 +94,23 @@ public class InternshipController {
     }
 
     @PUT
+    @Path("/{id}/reject-company")
+    @RolesAllowed("COMPANY")
+    public Response rejectByCompany(@PathParam("id") Long id) {
+
+        Long companyId = currentUserService.getUserId();
+
+        Internship internship =
+                internshipService.rejectByCompany(id, companyId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(internship).build();
+    }
+
+    @PUT
     @Path("/{id}/approve-lecturer")
     @RolesAllowed("LECTURER")
     public Response approveByLecturer(@PathParam("id") Long id) {
@@ -108,6 +119,53 @@ public class InternshipController {
 
         Internship internship =
                 internshipService.approveByLecturer(id, lecturerId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(internship).build();
+    }
+
+    @PUT
+    @Path("/{id}/reject-lecturer")
+    @RolesAllowed("LECTURER")
+    public Response rejectByLecturer(@PathParam("id") Long id) {
+
+        Long lecturerId = currentUserService.getUserId();
+
+        Internship internship =
+                internshipService.rejectByLecturer(id, lecturerId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(internship).build();
+    }
+
+    @PUT
+    @Path("/{id}/complete-company")
+    @RolesAllowed("COMPANY")
+    public Response completeByCompany(@PathParam("id") Long id) {
+        Long companyId = currentUserService.getUserId();
+
+        Internship internship = internshipService.completeByCompany(id, companyId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(internship).build();
+    }
+
+    @PUT
+    @Path("/{id}/complete-lecturer")
+    @RolesAllowed("LECTURER")
+    public Response completeByLecturer(@PathParam("id") Long id) {
+        Long lecturerId = currentUserService.getUserId();
+
+        Internship internship = internshipService.completeByLecturer(id, lecturerId);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
