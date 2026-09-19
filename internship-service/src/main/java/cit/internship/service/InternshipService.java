@@ -36,6 +36,35 @@ public class InternshipService {
         return internshipRepository.findByLecturerId(lecturerId);
     }
 
+    public boolean canViewInternship(
+            Internship internship,
+            String role,
+            Long userId) {
+
+        if (internship == null) {
+            return false;
+        }
+
+        switch (role) {
+            case "STUDENT":
+                return internship.getStudentId().equals(userId);
+
+            case "COMPANY":
+                return internship.getCompanyId() != null
+                        && internship.getCompanyId().equals(userId);
+
+            case "LECTURER":
+                return internship.getLecturerId() != null
+                        && internship.getLecturerId().equals(userId);
+
+            case "ADMIN":
+                return true;
+
+            default:
+                return false;
+        }
+    }
+
     @Transactional
     public Internship createInternship(InternshipRequest request, Long studentId) {
 

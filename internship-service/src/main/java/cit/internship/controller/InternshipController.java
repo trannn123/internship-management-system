@@ -14,6 +14,8 @@ import io.quarkus.security.Authenticated;
 import cit.internship.dto.MeResponse;
 import cit.internship.client.user.UserServiceClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -24,6 +26,7 @@ import java.util.Map;
 @Authenticated
 public class InternshipController {
 
+    private static final Logger log = LoggerFactory.getLogger(InternshipController.class);
     @Inject
     InternshipService internshipService;
 
@@ -38,10 +41,29 @@ public class InternshipController {
     @GET
     @Path("/{id}")
     public Response getInternshipById(@PathParam("id") Long id) {
+
         Internship internship = internshipService.getInternshipById(id);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        Long userId = currentUserService.getUserId();
+        String role = currentUserService.getRole();
+
+        boolean canView = internshipService.canViewInternship(
+                internship,
+                role,
+                userId
+        );
+
+        if (!canView) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of(
+                            "status", 403,
+                            "message", "You do not have permission to view this internship"
+                    ))
+                    .build();
         }
 
         return Response.ok(internship).build();

@@ -5,18 +5,31 @@ import cit.internship.dto.MeResponse;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 @ApplicationScoped
 public class CurrentUserService {
 
+    private static final Logger log = LoggerFactory.getLogger(CurrentUserService.class);
     @Inject
     @RestClient
     UserServiceClient userServiceClient;
 
     public MeResponse getCurrentUser() {
         return userServiceClient.getCurrentUser();
+    }
+
+    public String getRole() {
+        MeResponse me = getCurrentUser();
+
+        if (me == null || me.getRole() == null) {
+            throw new IllegalStateException("User role not found");
+        }
+
+        return me.getRole();
     }
 
     public Long getUserId() {
