@@ -2,19 +2,16 @@ package cit.internship.controller;
 
 import cit.internship.dto.InternshipRequest;
 import cit.internship.entity.Internship;
-import cit.internship.entity.InternshipStatus;
-import cit.internship.repository.InternshipRepository;
 import cit.internship.service.InternshipService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.Authenticated;
 import cit.internship.dto.MeResponse;
-import cit.internship.client.UserServiceClient;
+import cit.internship.client.user.UserServiceClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.util.List;
@@ -164,5 +161,24 @@ public class InternshipController {
         }
 
         return Response.ok(internship).build();
+    }
+
+    @GET
+    @Path("/me")
+    @RolesAllowed("STUDENT")
+    public Response getMyInternships() {
+        MeResponse me = userServiceClient.getCurrentUser();
+
+        if (me == null || me.getProfile() == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                .entity("Student profile not found")
+                .build();
+        }
+
+        Long studentId = extractStudentId(me);
+
+        List<Internship> internships = internshipService.getInternshipByStudentId(studentId);
+
+        return Response.ok(internships).build();
     }
 }

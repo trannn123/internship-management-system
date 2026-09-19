@@ -24,6 +24,10 @@ public class InternshipService {
         return internshipRepository.findById(id);
     }
 
+    public List<Internship> getInternshipByStudentId(Long studentId) {
+        return internshipRepository.findByStudentId(studentId);
+    }
+
     @Transactional
     public Internship createInternship(InternshipRequest request, Long studentId) {
 

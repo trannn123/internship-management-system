@@ -4,6 +4,13 @@ import cit.internship.entity.Internship;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
+import java.util.List;
+
 @ApplicationScoped
 public class InternshipRepository implements PanacheRepository<Internship> {
+
+    public List<Internship> findByStudentId(Long studentId) {
+        return find("studentId", studentId).list();
+    }
+
 }
