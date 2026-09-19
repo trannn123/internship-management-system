@@ -7,12 +7,15 @@ import cit.internship.repository.InternshipRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 @ApplicationScoped
 public class InternshipService {
 
+    private static final Logger log = LoggerFactory.getLogger(InternshipService.class);
     @Inject
     InternshipRepository internshipRepository;
 
