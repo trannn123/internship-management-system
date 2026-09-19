@@ -1,4 +1,4 @@
-package cit.internship;
+package cit.evaluation;
 
 import io.quarkus.test.junit.QuarkusIntegrationTest;
 

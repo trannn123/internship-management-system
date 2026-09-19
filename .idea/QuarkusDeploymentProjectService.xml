@@ -3,6 +3,14 @@
   <component name="QuarkusDeploymentProjectService">
     <option name="modules">
       <map>
+        <entry key="evaluation-service">
+          <value>
+            <ModuleState>
+              <option name="hash" value="-1694894398" />
+              <option name="version" value="1" />
+            </ModuleState>
+          </value>
+        </entry>
         <entry key="internship-service">
           <value>
             <ModuleState>
