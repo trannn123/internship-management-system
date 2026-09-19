@@ -28,6 +28,14 @@ public class InternshipService {
         return internshipRepository.findByStudentId(studentId);
     }
 
+    public List<Internship> getInternshipsByCompanyId(Long companyId) {
+        return internshipRepository.findByCompanyId(companyId);
+    }
+
+    public List<Internship> getInternshipsByLecturerId(Long lecturerId) {
+        return internshipRepository.findByLecturerId(lecturerId);
+    }
+
     @Transactional
     public Internship createInternship(InternshipRequest request, Long studentId) {
 

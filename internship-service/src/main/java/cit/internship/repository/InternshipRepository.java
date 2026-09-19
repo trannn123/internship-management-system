@@ -13,4 +13,12 @@ public class InternshipRepository implements PanacheRepository<Internship> {
         return find("studentId", studentId).list();
     }
 
+    public List<Internship> findByCompanyId(Long companyId) {
+        return find("companyId", companyId).list();
+    }
+
+    public List<Internship> findByLecturerId(Long lecturerId) {
+        return find("lecturerId", lecturerId).list();
+    }
+
 }

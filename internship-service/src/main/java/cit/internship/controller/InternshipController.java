@@ -150,7 +150,7 @@ public class InternshipController {
     }
 
     @GET
-    @Path("/me")
+    @Path("/me/student")
     @RolesAllowed("STUDENT")
     public Response getMyInternships() {
 
@@ -160,4 +160,27 @@ public class InternshipController {
 
         return Response.ok(internships).build();
     }
+
+    @GET
+    @Path("/me/company")
+    @RolesAllowed("COMPANY")
+    public Response getMyCompanyInternships() {
+        Long companyId = currentUserService.getUserId();
+
+        List<Internship> internships = internshipService.getInternshipsByCompanyId(companyId);
+
+        return Response.ok(internships).build();
+    }
+
+    @GET
+    @Path("/me/lecturer")
+    @RolesAllowed("LECTURER")
+    public Response getMyLecturerInternships() {
+        Long lecturerId = currentUserService.getUserId();
+
+        List<Internship> internships = internshipService.getInternshipsByLecturerId(lecturerId);
+
+        return Response.ok(internships).build();
+    }
+
 }
