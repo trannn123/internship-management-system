@@ -7,6 +7,8 @@ import java.time.LocalDate;
 
 public class InternshipRequest {
 
+    private Long studentId;
+
     private Long companyId;
 
     private Long lecturerId;
@@ -24,6 +26,14 @@ public class InternshipRequest {
     private LocalDate endDate;
 
     public InternshipRequest() {
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 
     public Long getCompanyId() {

@@ -2,20 +2,15 @@ package cit.internship.controller;
 
 import cit.internship.dto.InternshipRequest;
 import cit.internship.entity.Internship;
-import cit.internship.entity.InternshipStatus;
-import cit.internship.repository.InternshipRepository;
+import cit.internship.service.CurrentUserService;
 import cit.internship.service.InternshipService;
 import jakarta.annotation.security.RolesAllowed;
 import jakarta.inject.Inject;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.Authenticated;
-import cit.internship.dto.MeResponse;
-import cit.internship.client.UserServiceClient;
-import org.eclipse.microprofile.rest.client.inject.RestClient;
 
 import java.util.List;
 import java.util.Map;
@@ -30,92 +25,91 @@ public class InternshipController {
     InternshipService internshipService;
 
     @Inject
-    @RestClient
-    UserServiceClient userServiceClient;
+    CurrentUserService currentUserService;
 
     @GET
     public List<Internship> getAllInternships() {
-        return internshipService.getAllInternships();
+        String role = currentUserService.getRole();
+
+        if ("ADMIN".equals(role)) {
+            return internshipService.getAllInternships();
+        }
+
+        Long userId = currentUserService.getUserId();
+
+        switch (role) {
+            case "STUDENT":
+                return internshipService.getInternshipByStudentId(userId);
+
+            case "COMPANY":
+                return internshipService.getInternshipsByCompanyId(userId);
+
+            case "LECTURER":
+                return internshipService.getInternshipsByLecturerId(userId);
+
+            default:
+                return List.of();
+        }
     }
 
     @GET
     @Path("/{id}")
     public Response getInternshipById(@PathParam("id") Long id) {
+
         Internship internship = internshipService.getInternshipById(id);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response.ok(internship).build();
-    }
+        Long userId = currentUserService.getUserId();
+        String role = currentUserService.getRole();
 
-    private Long extractStudentId(MeResponse me) {
-        if (!(me.getProfile() instanceof Map)) {
-            throw new IllegalArgumentException("Invalid student profile");
-        }
+        boolean canView = internshipService.canViewInternship(
+                internship,
+                role,
+                userId
+        );
 
-        Map<?, ?> profile = (Map<?, ?>) me.getProfile();
-
-        Object id = profile.get("id");
-
-        if (!(id instanceof Number)) {
-            throw new IllegalArgumentException("Student ID not found");
-        }
-
-        return ((Number) id).longValue();
-    }
-
-    @POST
-    @RolesAllowed("STUDENT")
-    public Response createInternship(@Valid InternshipRequest request) {
-        MeResponse me = userServiceClient.getCurrentUser();
-
-        if (me == null || me.getProfile() == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Student profile not found")
+        if (!canView) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of(
+                            "status", 403,
+                            "message", "You do not have permission to view this internship"
+                    ))
                     .build();
         }
 
-        Long studentId = extractStudentId(me);
+        return Response.ok(internship).build();
+    }
 
+    @POST
+    @RolesAllowed("ADMIN")
+    public Response createInternship(@Valid InternshipRequest request) {
+        if (request.getStudentId() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of(
+                            "status", 400,
+                            "message", "studentId is required for admin-created internships"
+                    ))
+                    .build();
+        }
+
+        // Students must use /api/internship-registrations so company/lecturer assignments are derived server-side from the official workflow.
         Internship internship =
-                internshipService.createInternship(request, studentId);
+                internshipService.createInternship(request, request.getStudentId());
 
         return Response.status(Response.Status.CREATED)
                 .entity(internship)
                 .build();
     }
 
-    private Long extractCompanyId(MeResponse me) {
-        if (!(me.getProfile() instanceof Map)) {
-            throw new IllegalArgumentException("Invalid company profile");
-        }
-
-        Map<?, ?> profile = (Map<?, ?>) me.getProfile();
-
-        Object id = profile.get("id");
-
-        if (!(id instanceof Number)) {
-            throw new IllegalArgumentException("Company ID not found");
-        }
-
-        return ((Number) id).longValue();
-    }
-
     @PUT
     @Path("/{id}/approve-company")
     @RolesAllowed("COMPANY")
     public Response approveByCompany(@PathParam("id") Long id) {
-        MeResponse me = userServiceClient.getCurrentUser();
 
-        if (me == null || me.getProfile() == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Company profile not found")
-                    .build();
-        }
-
-        Long companyId = extractCompanyId(me);
+        Long companyId = currentUserService.getUserId();
 
         Internship internship = internshipService.approveByCompany(id, companyId);
 
@@ -126,35 +120,29 @@ public class InternshipController {
         return Response.ok(internship).build();
     }
 
-    private Long extractLecturerId(MeResponse me) {
-        if (!(me.getProfile() instanceof Map)) {
-            throw new IllegalArgumentException("Invalid lecturer profile");
+    @PUT
+    @Path("/{id}/reject-company")
+    @RolesAllowed("COMPANY")
+    public Response rejectByCompany(@PathParam("id") Long id) {
+
+        Long companyId = currentUserService.getUserId();
+
+        Internship internship =
+                internshipService.rejectByCompany(id, companyId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        Map<?, ?> profile = (Map<?, ?>) me.getProfile();
-
-        Object id = profile.get("id");
-
-        if (!(id instanceof Number)) {
-            throw new IllegalArgumentException("Lecturer ID not found");
-        }
-
-        return ((Number) id).longValue();
+        return Response.ok(internship).build();
     }
 
     @PUT
     @Path("/{id}/approve-lecturer")
     @RolesAllowed("LECTURER")
     public Response approveByLecturer(@PathParam("id") Long id) {
-        MeResponse me = userServiceClient.getCurrentUser();
 
-        if (me == null || me.getProfile() == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("Lecturer profile not found")
-                    .build();
-        }
-
-        Long lecturerId = extractLecturerId(me);
+        Long lecturerId = currentUserService.getUserId();
 
         Internship internship =
                 internshipService.approveByLecturer(id, lecturerId);
@@ -165,4 +153,86 @@ public class InternshipController {
 
         return Response.ok(internship).build();
     }
+
+    @PUT
+    @Path("/{id}/reject-lecturer")
+    @RolesAllowed("LECTURER")
+    public Response rejectByLecturer(@PathParam("id") Long id) {
+
+        Long lecturerId = currentUserService.getUserId();
+
+        Internship internship =
+                internshipService.rejectByLecturer(id, lecturerId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(internship).build();
+    }
+
+    @PUT
+    @Path("/{id}/complete-company")
+    @RolesAllowed("COMPANY")
+    public Response completeByCompany(@PathParam("id") Long id) {
+        Long companyId = currentUserService.getUserId();
+
+        Internship internship = internshipService.completeByCompany(id, companyId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(internship).build();
+    }
+
+    @PUT
+    @Path("/{id}/complete-lecturer")
+    @RolesAllowed("LECTURER")
+    public Response completeByLecturer(@PathParam("id") Long id) {
+        Long lecturerId = currentUserService.getUserId();
+
+        Internship internship = internshipService.completeByLecturer(id, lecturerId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(internship).build();
+    }
+
+    @GET
+    @Path("/me/student")
+    @RolesAllowed("STUDENT")
+    public Response getMyInternships() {
+
+        Long studentId = currentUserService.getUserId();
+
+        List<Internship> internships = internshipService.getInternshipByStudentId(studentId);
+
+        return Response.ok(internships).build();
+    }
+
+    @GET
+    @Path("/me/company")
+    @RolesAllowed("COMPANY")
+    public Response getMyCompanyInternships() {
+        Long companyId = currentUserService.getUserId();
+
+        List<Internship> internships = internshipService.getInternshipsByCompanyId(companyId);
+
+        return Response.ok(internships).build();
+    }
+
+    @GET
+    @Path("/me/lecturer")
+    @RolesAllowed("LECTURER")
+    public Response getMyLecturerInternships() {
+        Long lecturerId = currentUserService.getUserId();
+
+        List<Internship> internships = internshipService.getInternshipsByLecturerId(lecturerId);
+
+        return Response.ok(internships).build();
+    }
+
 }

@@ -1,6 +1,12 @@
 package cit.internship.service;
 
+import cit.internship.entity.Company;
+import cit.internship.entity.Lecturer;
+import cit.internship.entity.Student;
 import cit.internship.entity.User;
+import cit.internship.repository.CompanyRepository;
+import cit.internship.repository.LecturerRepository;
+import cit.internship.repository.StudentRepository;
 import cit.internship.repository.UserRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -13,10 +19,35 @@ import java.util.List;
 public class UserService {
 
     @Inject
+    StudentRepository studentRepository;
+
+    @Inject
+    LecturerRepository lecturerRepository;
+
+    @Inject
+    CompanyRepository companyRepository;
+
+    @Inject
     UserRepository userRepository;
 
     public List<User> getAllUsers() {
         return userRepository.listAll();
+    }
+
+    public List<Lecturer> getAllLecturers() {
+        return lecturerRepository.listAll();
+    }
+
+    public Student getStudentById(Long id) {
+        return studentRepository.findById(id);
+    }
+
+    public Company getCompanyById(Long id) {
+        return companyRepository.findById(id);
+    }
+
+    public Lecturer getLecturerById(Long id) {
+        return lecturerRepository.findById(id);
     }
 
     public User getUserByKeycloakUserId(String keycloakUserId) {
@@ -81,6 +112,21 @@ public class UserService {
 
         if (user == null) {
             return false;
+        }
+
+        Student student = studentRepository.find("user", user).firstResult();
+        if (student != null) {
+            studentRepository.delete(student);
+        }
+
+        Lecturer lecturer = lecturerRepository.find("user", user).firstResult();
+        if (lecturer != null) {
+            lecturerRepository.delete(lecturer);
+        }
+
+        Company company = companyRepository.find("user", user).firstResult();
+        if (company != null) {
+            companyRepository.delete(company);
         }
 
         userRepository.delete(user);
