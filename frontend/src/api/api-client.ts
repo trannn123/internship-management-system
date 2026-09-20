@@ -1,8 +1,11 @@
 import keycloak from "../keycloak";
 
-const API_BASE_URL = "http://localhost:8081";
+export const USER_SERVICE_URL = "http://localhost:8081";
+export const INTERNSHIP_SERVICE_URL = "http://localhost:8082";
+export const EVALUATION_SERVICE_URL = "http://localhost:8083";
 
 export async function apiFetch(
+  baseUrl: string,
   path: string,
   options: RequestInit = {}
 ) {
@@ -15,7 +18,7 @@ export async function apiFetch(
   headers.set("Authorization", `Bearer ${keycloak.token}`);
   headers.set("Content-Type", "application/json");
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
+  const response = await fetch(`${baseUrl}${path}`, {
     ...options,
     headers,
   });
