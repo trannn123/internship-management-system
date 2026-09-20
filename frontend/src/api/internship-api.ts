@@ -16,3 +16,21 @@ export function getInternshipById(id: number) {
     `/api/internships/${id}`
   );
 }
+
+export function createInternship(data: {
+  companyId: number | null;
+  lecturerId: number | null;
+  position: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+}) {
+  return apiFetch(
+    INTERNSHIP_SERVICE_URL,
+    "/api/internships",
+    {
+      method: "POST",
+      body: JSON.stringify(data),
+    }
+  );
+}
