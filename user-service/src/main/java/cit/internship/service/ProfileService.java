@@ -43,6 +43,24 @@ public class ProfileService {
         User user = userRepository.find("keycloakUserId", keycloakUserId).firstResult();
 
         if (user != null) {
+            // Keep the locally cached profile in sync with Keycloak in case the
+            // user's name/email was set or changed after their first login.
+            boolean changed = false;
+
+            if (fullName != null && !fullName.equals(user.getFullName())) {
+                user.setFullName(fullName);
+                changed = true;
+            }
+
+            if (email != null && !email.equals(user.getEmail())) {
+                user.setEmail(email);
+                changed = true;
+            }
+
+            if (changed) {
+                userRepository.persist(user);
+            }
+
             return user;
         }
 

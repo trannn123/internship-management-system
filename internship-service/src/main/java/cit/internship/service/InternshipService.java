@@ -1,8 +1,7 @@
 package cit.internship.service;
 
 import cit.internship.dto.InternshipRequest;
-import cit.internship.entity.Internship;
-import cit.internship.entity.InternshipStatus;
+import cit.internship.entity.*;
 import cit.internship.repository.InternshipRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -25,6 +24,10 @@ public class InternshipService {
 
     public Internship getInternshipById(Long id) {
         return internshipRepository.findById(id);
+    }
+
+    public Internship getInternshipByRegistrationId(Long registrationId) {
+        return internshipRepository.findByRegistrationId(registrationId);
     }
 
     public List<Internship> getInternshipByStudentId(Long studentId) {
@@ -88,6 +91,36 @@ public class InternshipService {
         }
 
         internshipRepository.persist(internship);
+
+        return internship;
+    }
+
+    @Transactional
+    public Internship createOrReuseFromRegistration(
+            InternshipRegistration registration,
+            InternshipOpportunity opportunity,
+            InternshipPeriod period
+    ) {
+        Internship internship = internshipRepository.findByRegistrationId(registration.getId());
+        boolean isNew = internship == null;
+
+        if (isNew) {
+            internship = new Internship();
+            internship.setRegistrationId(registration.getId());
+        }
+
+        internship.setStudentId(registration.getStudentId());
+        internship.setCompanyId(registration.getCompanyId());
+        internship.setLecturerId(registration.getLecturerId());
+        internship.setPosition(opportunity.getPosition());
+        internship.setDescription(opportunity.getDescription());
+        internship.setStartDate(period.getInternshipStartDate());
+        internship.setEndDate(period.getInternshipEndDate());
+        internship.setStatus(InternshipStatus.IN_PROGRESS);
+
+        if (isNew) {
+            internshipRepository.persist(internship);
+        }
 
         return internship;
     }

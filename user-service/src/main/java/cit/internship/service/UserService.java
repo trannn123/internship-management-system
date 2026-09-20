@@ -34,6 +34,22 @@ public class UserService {
         return userRepository.listAll();
     }
 
+    public List<Lecturer> getAllLecturers() {
+        return lecturerRepository.listAll();
+    }
+
+    public Student getStudentById(Long id) {
+        return studentRepository.findById(id);
+    }
+
+    public Company getCompanyById(Long id) {
+        return companyRepository.findById(id);
+    }
+
+    public Lecturer getLecturerById(Long id) {
+        return lecturerRepository.findById(id);
+    }
+
     public User getUserByKeycloakUserId(String keycloakUserId) {
         return userRepository.find("keycloakUserId", keycloakUserId).firstResult();
     }

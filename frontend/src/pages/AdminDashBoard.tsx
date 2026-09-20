@@ -1,27 +1,7 @@
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../api/user-api";
 import { getMyInternships } from "../api/internship-api";
-
-interface CurrentUser {
-  id: number;
-  keycloakUserId: string;
-  fullName: string;
-  email: string;
-  role: string;
-  profile: null;
-}
-
-interface Internship {
-  id: number;
-  studentId: number;
-  companyId: number | null;
-  lecturerId: number | null;
-  position: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-}
+import { getCurrentUser } from "../api/user-api";
+import type { CurrentUser, Internship } from "../types";
 
 function AdminDashboard() {
   const [user, setUser] = useState<CurrentUser | null>(null);

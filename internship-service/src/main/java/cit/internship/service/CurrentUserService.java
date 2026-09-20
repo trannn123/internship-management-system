@@ -35,7 +35,14 @@ public class CurrentUserService {
     public Long getUserId() {
         MeResponse me = getCurrentUser();
 
-        if (me == null || me.getProfile() == null) {
+        if (me == null) {
+            throw new IllegalStateException("Current user not found");
+        }
+
+        if (me.getProfile() == null) {
+            if ("ADMIN".equals(me.getRole()) && me.getId() != null) {
+                return me.getId();
+            }
             throw new IllegalStateException("User profile not found");
         }
 

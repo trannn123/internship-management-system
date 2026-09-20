@@ -2,6 +2,7 @@ package cit.evaluation.service;
 
 import cit.evaluation.client.internship.InternshipResponse;
 import cit.evaluation.client.internship.InternshipServiceClient;
+import cit.evaluation.dto.EvaluationExistenceResponse;
 import cit.evaluation.dto.EvaluationSummaryResponse;
 import cit.evaluation.entity.CompanyEvaluation;
 import cit.evaluation.entity.LecturerEvaluation;
@@ -34,6 +35,10 @@ public class EvaluationSummaryService {
 
         if (internship == null) {
             return false;
+        }
+
+        if ("ADMIN".equals(role)) {
+            return true;
         }
 
         if ("STUDENT".equals(role)) {
@@ -100,6 +105,29 @@ public class EvaluationSummaryService {
 
             response.setFinalScore(finalScore);
         }
+
+        return response;
+    }
+
+    public EvaluationExistenceResponse getEvaluationExistence(
+            Long internshipId) {
+
+        CompanyEvaluation companyEvaluation =
+                companyEvaluationRepository.findByInternshipId(
+                        internshipId
+                );
+
+        LecturerEvaluation lecturerEvaluation =
+                lecturerEvaluationRepository.findByInternshipId(
+                        internshipId
+                );
+
+        EvaluationExistenceResponse response =
+                new EvaluationExistenceResponse();
+
+        response.setInternshipId(internshipId);
+        response.setCompanyEvaluationExists(companyEvaluation != null);
+        response.setLecturerEvaluationExists(lecturerEvaluation != null);
 
         return response;
     }

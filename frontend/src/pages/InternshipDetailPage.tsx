@@ -1,18 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { getInternshipById } from "../api/internship-api";
-
-interface Internship {
-  id: number;
-  studentId: number;
-  companyId: number | null;
-  lecturerId: number | null;
-  position: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-}
+import type { Internship } from "../types";
 
 function InternshipDetailPage() {
   const { id } = useParams();

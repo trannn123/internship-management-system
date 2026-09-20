@@ -21,6 +21,9 @@ public class Internship {
     @Column(name = "lecturer_id")
     private Long lecturerId;
 
+    @Column(name = "registration_id")
+    private Long registrationId;
+
     @Column(name = "position")
     private String position;
 
@@ -66,6 +69,14 @@ public class Internship {
 
     public void setLecturerId(Long lecturerId) {
         this.lecturerId = lecturerId;
+    }
+
+    public Long getRegistrationId() {
+        return registrationId;
+    }
+
+    public void setRegistrationId(Long registrationId) {
+        this.registrationId = registrationId;
     }
 
     public String getPosition() {

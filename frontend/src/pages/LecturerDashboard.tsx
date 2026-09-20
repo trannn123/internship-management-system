@@ -1,34 +1,7 @@
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../api/user-api";
 import { getMyInternships } from "../api/internship-api";
-
-interface UserProfile {
-  id: number;
-  lecturerCode?: string;
-  department?: string;
-  phone?: string;
-}
-
-interface CurrentUser {
-  id: number;
-  keycloakUserId: string;
-  fullName: string;
-  email: string;
-  role: string;
-  profile: UserProfile | null;
-}
-
-interface Internship {
-  id: number;
-  studentId: number;
-  companyId: number | null;
-  lecturerId: number | null;
-  position: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-}
+import { getCurrentUser } from "../api/user-api";
+import type { CurrentUser, Internship, LecturerProfile } from "../types";
 
 function LecturerDashboard() {
   const [user, setUser] = useState<CurrentUser | null>(null);
@@ -59,6 +32,8 @@ function LecturerDashboard() {
     return <p>Đang tải dữ liệu...</p>;
   }
 
+  const profile = user?.profile as LecturerProfile | null | undefined;
+
   return (
     <div>
       <h2>Lecturer Dashboard</h2>
@@ -77,17 +52,17 @@ function LecturerDashboard() {
 
           <p>
             <strong>Mã giảng viên:</strong>{" "}
-            {user.profile?.lecturerCode ?? "Chưa cập nhật"}
+            {profile?.lecturerCode ?? "Chưa cập nhật"}
           </p>
 
           <p>
             <strong>Khoa/Bộ môn:</strong>{" "}
-            {user.profile?.department ?? "Chưa cập nhật"}
+            {profile?.department ?? "Chưa cập nhật"}
           </p>
 
           <p>
             <strong>Số điện thoại:</strong>{" "}
-            {user.profile?.phone ?? "Chưa cập nhật"}
+            {profile?.phone ?? "Chưa cập nhật"}
           </p>
         </div>
       )}

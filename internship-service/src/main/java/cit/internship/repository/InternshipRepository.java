@@ -21,4 +21,7 @@ public class InternshipRepository implements PanacheRepository<Internship> {
         return find("lecturerId", lecturerId).list();
     }
 
+    public Internship findByRegistrationId(Long registrationId) {
+        return find("registrationId", registrationId).firstResult();
+    }
 }

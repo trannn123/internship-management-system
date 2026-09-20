@@ -39,10 +39,34 @@ public class UserController {
     }
 
     @GET
+    @Path("/lecturers")
+    @RolesAllowed("ADMIN")
+    public List<cit.internship.dto.LecturerSummaryResponse> getAllLecturers() {
+        return userService.getAllLecturers()
+                .stream()
+                .map(lecturer -> new cit.internship.dto.LecturerSummaryResponse(
+                        lecturer.getId(),
+                        lecturer.getUser() != null ? lecturer.getUser().getId() : null,
+                        lecturer.getUser() != null ? lecturer.getUser().getFullName() : null,
+                        lecturer.getUser() != null ? lecturer.getUser().getEmail() : null,
+                        lecturer.getLecturerCode(),
+                        lecturer.getDepartment()
+                ))
+                .toList();
+    }
+
+    @GET
     @Path("/me")
     public Response getCurrentUser() {
         String keycloakUserId = jwt.getSubject();
-        String fullName = jwt.getName();
+        // NOTE: JsonWebToken.getName() maps to the MP-JWT "upn" claim (Keycloak
+        // defaults this to the username), NOT the OIDC "name" claim. Read the
+        // "name" claim explicitly to get the user's actual first + last name,
+        // falling back to the username-based upn only if it's missing.
+        String fullName = jwt.getClaim("name");
+        if (fullName == null || fullName.isBlank()) {
+            fullName = jwt.getName();
+        }
         String email = jwt.getClaim("email");
 
         String role = jwt.getGroups()
@@ -177,8 +201,67 @@ public class UserController {
     }
 
     @GET
+    @Path("/lecturers/{id}")
+    public Response getLecturerById(@PathParam("id") Long id) {
+        cit.internship.entity.Lecturer lecturer = userService.getLecturerById(id);
+
+        if (lecturer == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(new cit.internship.dto.LecturerSummaryResponse(
+                lecturer.getId(),
+                lecturer.getUser() != null ? lecturer.getUser().getId() : null,
+                lecturer.getUser() != null ? lecturer.getUser().getFullName() : null,
+                lecturer.getUser() != null ? lecturer.getUser().getEmail() : null,
+                lecturer.getLecturerCode(),
+                lecturer.getDepartment()
+        )).build();
+    }
+
+    @GET
+    @Path("/students/{id}")
+    public Response getStudentById(@PathParam("id") Long id) {
+        cit.internship.entity.Student student = userService.getStudentById(id);
+
+        if (student == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(new cit.internship.dto.StudentSummaryResponse(
+                student.getId(),
+                student.getUser() != null ? student.getUser().getId() : null,
+                student.getUser() != null ? student.getUser().getFullName() : null,
+                student.getUser() != null ? student.getUser().getEmail() : null,
+                student.getStudentCode(),
+                student.getClassName(),
+                student.getMajor()
+        )).build();
+    }
+
+    @GET
+    @Path("/companies/{id}")
+    public Response getCompanyById(@PathParam("id") Long id) {
+        cit.internship.entity.Company company = userService.getCompanyById(id);
+
+        if (company == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        return Response.ok(new cit.internship.dto.CompanySummaryResponse(
+                company.getId(),
+                company.getUser() != null ? company.getUser().getId() : null,
+                company.getUser() != null ? company.getUser().getFullName() : null,
+                company.getUser() != null ? company.getUser().getEmail() : null,
+                company.getCompanyName(),
+                company.getTaxCode(),
+                company.getAddress(),
+                company.getPhone()
+        )).build();
+    }
+
+    @GET
     @Path("/{id}")
-    @RolesAllowed({"ADMIN", "LECTURER"})
     public Response getUserById(@PathParam("id") Long id) {
         User user = userService.getUserById(id);
 

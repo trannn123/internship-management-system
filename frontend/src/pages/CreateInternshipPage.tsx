@@ -24,6 +24,7 @@ function CreateInternshipPage() {
     setError("");
 
     try {
+      // TODO: Replace this temporary admin-only internship creation flow with internship registration UI.
       await createInternship({
         companyId: companyId ? Number(companyId) : null,
         lecturerId: lecturerId ? Number(lecturerId) : null,

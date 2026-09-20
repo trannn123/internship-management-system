@@ -1,5 +1,6 @@
 package cit.evaluation.controller;
 
+import cit.evaluation.dto.EvaluationExistenceResponse;
 import cit.evaluation.dto.EvaluationSummaryResponse;
 import cit.evaluation.service.CurrentUserService;
 import cit.evaluation.service.EvaluationSummaryService;
@@ -43,6 +44,38 @@ public class EvaluationSummaryController {
 
         EvaluationSummaryResponse response =
                 evaluationSummaryService.getSummary(internshipId);
+
+        return Response.ok(response).build();
+    }
+
+    @GET
+    @Path("/{internshipId}/exists")
+    @RolesAllowed({"ADMIN", "COMPANY", "LECTURER"})
+    public Response getEvaluationExistence(
+            @PathParam("internshipId") Long internshipId
+    ) {
+        String role = currentUserService.getRole();
+        Long userId = "ADMIN".equals(role)
+                ? null
+                : currentUserService.getUserId();
+
+        boolean canView =
+                evaluationSummaryService.canViewSummary(
+                        internshipId,
+                        userId,
+                        role
+                );
+
+        if (!canView) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity("{\"message\":\"You do not have permission to view this evaluation summary\"}")
+                    .build();
+        }
+
+        EvaluationExistenceResponse response =
+                evaluationSummaryService.getEvaluationExistence(
+                        internshipId
+                );
 
         return Response.ok(response).build();
     }

@@ -1,35 +1,7 @@
 import { useEffect, useState } from "react";
-import { getCurrentUser } from "../api/user-api";
 import { getMyInternships } from "../api/internship-api";
-
-interface UserProfile {
-  id: number;
-  companyName?: string;
-  taxCode?: string;
-  address?: string;
-  phone?: string;
-}
-
-interface CurrentUser {
-  id: number;
-  keycloakUserId: string;
-  fullName: string;
-  email: string;
-  role: string;
-  profile: UserProfile | null;
-}
-
-interface Internship {
-  id: number;
-  studentId: number;
-  companyId: number | null;
-  lecturerId: number | null;
-  position: string;
-  description: string;
-  startDate: string;
-  endDate: string;
-  status: string;
-}
+import { getCurrentUser } from "../api/user-api";
+import type { CompanyProfile, CurrentUser, Internship } from "../types";
 
 function CompanyDashboard() {
   const [user, setUser] = useState<CurrentUser | null>(null);
@@ -60,6 +32,8 @@ function CompanyDashboard() {
     return <p>Đang tải dữ liệu...</p>;
   }
 
+  const profile = user?.profile as CompanyProfile | null | undefined;
+
   return (
     <div>
       <h2>Company Dashboard</h2>
@@ -78,22 +52,22 @@ function CompanyDashboard() {
 
           <p>
             <strong>Tên doanh nghiệp:</strong>{" "}
-            {user.profile?.companyName ?? "Chưa cập nhật"}
+            {profile?.companyName ?? "Chưa cập nhật"}
           </p>
 
           <p>
             <strong>Mã số thuế:</strong>{" "}
-            {user.profile?.taxCode ?? "Chưa cập nhật"}
+            {profile?.taxCode ?? "Chưa cập nhật"}
           </p>
 
           <p>
             <strong>Địa chỉ:</strong>{" "}
-            {user.profile?.address ?? "Chưa cập nhật"}
+            {profile?.address ?? "Chưa cập nhật"}
           </p>
 
           <p>
             <strong>Số điện thoại:</strong>{" "}
-            {user.profile?.phone ?? "Chưa cập nhật"}
+            {profile?.phone ?? "Chưa cập nhật"}
           </p>
         </div>
       )}

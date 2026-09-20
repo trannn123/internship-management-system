@@ -84,13 +84,20 @@ public class InternshipController {
     }
 
     @POST
-    @RolesAllowed("STUDENT")
+    @RolesAllowed("ADMIN")
     public Response createInternship(@Valid InternshipRequest request) {
+        if (request.getStudentId() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of(
+                            "status", 400,
+                            "message", "studentId is required for admin-created internships"
+                    ))
+                    .build();
+        }
 
-        Long studentId = currentUserService.getUserId();
-
+        // Students must use /api/internship-registrations so company/lecturer assignments are derived server-side from the official workflow.
         Internship internship =
-                internshipService.createInternship(request, studentId);
+                internshipService.createInternship(request, request.getStudentId());
 
         return Response.status(Response.Status.CREATED)
                 .entity(internship)
