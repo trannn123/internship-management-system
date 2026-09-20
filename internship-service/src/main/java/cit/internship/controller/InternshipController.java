@@ -29,7 +29,17 @@ public class InternshipController {
 
     @GET
     public List<Internship> getAllInternships() {
-        return internshipService.getAllInternships();
+
+        String role = currentUserService.getRole();
+        Long userId = currentUserService.getUserId();
+
+        return switch (role) {
+            case "ADMIN" -> internshipService.getAllInternships();
+            case "STUDENT" -> internshipService.getInternshipByStudentId(userId);
+            case "COMPANY" -> internshipService.getInternshipsByCompanyId(userId);
+            case "LECTURER" -> internshipService.getInternshipsByLecturerId(userId);
+            default -> List.of();
+        };
     }
 
     @GET
