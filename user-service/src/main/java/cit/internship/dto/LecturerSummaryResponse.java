@@ -1,11 +1,5 @@
 package cit.internship.dto;
 
-/**
- * Lightweight lecturer directory entry used by admin-facing UIs (e.g. assigning
- * a lecturer to an InternshipPeriod in internship-service). Exposes the
- * Lecturer profile id (not the User id) since that is the id other services
- * store as `lecturerId`.
- */
 public class LecturerSummaryResponse {
 
     private Long id;

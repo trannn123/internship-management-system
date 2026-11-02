@@ -1,9 +1,5 @@
 package cit.internship.dto;
 
-/**
- * Lightweight company directory entry. Exposes the Company profile id (not the
- * User id) since that is the id other services store as `companyId`.
- */
 public class CompanySummaryResponse {
 
     private Long id;

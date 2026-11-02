@@ -59,10 +59,6 @@ public class UserController {
     @Path("/me")
     public Response getCurrentUser() {
         String keycloakUserId = jwt.getSubject();
-        // NOTE: JsonWebToken.getName() maps to the MP-JWT "upn" claim (Keycloak
-        // defaults this to the username), NOT the OIDC "name" claim. Read the
-        // "name" claim explicitly to get the user's actual first + last name,
-        // falling back to the username-based upn only if it's missing.
         String fullName = jwt.getClaim("name");
         if (fullName == null || fullName.isBlank()) {
             fullName = jwt.getName();

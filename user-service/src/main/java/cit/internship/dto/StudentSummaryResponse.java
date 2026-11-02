@@ -1,9 +1,5 @@
 package cit.internship.dto;
 
-/**
- * Lightweight student directory entry. Exposes the Student profile id (not the
- * User id) since that is the id other services store as `studentId`.
- */
 public class StudentSummaryResponse {
 
     private Long id;
