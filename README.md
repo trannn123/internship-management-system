@@ -53,12 +53,27 @@ GIẢNG VIÊN duyệt hồ sơ ứng tuyển
         ↓
 Hồ sơ chuyển sang trạng thái ĐANG THỰC TẬP (IN_PROGRESS)
         ↓
-Doanh nghiệp lập Kế hoạch công việc (Work Plan) → giao Công việc (Task)
+Doanh nghiệp lập Kế hoạch công việc (Work Plan)
+và giao Công việc (Task)
+        ↓
 Sinh viên thực hiện công việc và ghi Nhật ký thực tập (Internship Log)
         ↓
-DOANH NGHIỆP đánh giá sinh viên  →  trạng thái "Doanh nghiệp đã đánh giá"
+DOANH NGHIỆP đánh giá sinh viên
         ↓
-GIẢNG VIÊN đánh giá sinh viên    →  trạng thái "HOÀN THÀNH"
+Doanh nghiệp xác nhận hoàn thành đánh giá
+        ↓
+Trạng thái: COMPLETED_COMPANY
+        ↓
+GIẢNG VIÊN đánh giá sinh viên
+        ↓
+GIẢNG VIÊN xác nhận hoàn thành thực tập
+        ↓
+Hệ thống kiểm tra cả hai đánh giá đã tồn tại
+        ↓
+Registration: COMPLETED
+Internship: COMPLETED_LECTURER
+        ↓
+Sinh viên xem kết quả đánh giá
         ↓
 Điểm tổng kết = 80% điểm Doanh nghiệp + 20% điểm Giảng viên
 ```
@@ -71,9 +86,9 @@ GIẢNG VIÊN đánh giá sinh viên    →  trạng thái "HOÀN THÀNH"
 | `REJECTED_COMPANY` | Doanh nghiệp từ chối |
 | `PENDING_LECTURER` | Chờ giảng viên duyệt |
 | `REJECTED_LECTURER` | Giảng viên từ chối |
-| `IN_PROGRESS` | Đang thực tập |
-| `COMPLETED_COMPANY` | Doanh nghiệp đã đánh giá, chờ giảng viên đánh giá |
-| `COMPLETED` | Đã hoàn thành (cả hai bên đã đánh giá) |
+| `IN_PROGRESS` | Đã được phê duyệt, đang thực tập |
+| `COMPLETED_COMPANY` | Doanh nghiệp đã đánh giá và xác nhận hoàn thành phần của mình |
+| `COMPLETED` | Giảng viên đã xác nhận hoàn thành thực tập |
 
 > Lưu ý kỹ thuật: hệ thống có **hai trạng thái song song** — trạng thái của *hồ sơ đăng ký* (`InternshipRegistration.status`, do `internship-service` quản lý xuyên suốt quy trình duyệt) và trạng thái của *đợt thực tập đã được duyệt* (`Internship.status`, chỉ tồn tại sau khi hồ sơ được duyệt xong). Hai bảng trạng thái này được đồng bộ thủ công tại các điểm chuyển pha (duyệt, đánh giá).
 
@@ -96,42 +111,45 @@ Mỗi vai trò chỉ nhìn thấy menu và trang tương ứng (được cấu h
 
 ## 4. Kiến trúc hệ thống
 
-Dự án theo kiến trúc **microservices**, mỗi service có database Postgres riêng, giao tiếp qua REST API (gọi trực tiếp từ frontend tới từng service):
+Dự án áp dụng kiến trúc **microservices**, gồm 3 backend service độc lập. Mỗi service quản lý một database PostgreSQL riêng theo mô hình Database-per-Service. Các thành phần giao tiếp với nhau thông qua REST API:
+- **Frontend → Backend**: Frontend gọi trực tiếp đến từng service thông qua REST API, không sử dụng API Gateway.
+- **Backend → Backend**: Các service giao tiếp trực tiếp thông qua REST API khi cần trao đổi dữ liệu hoặc kiểm tra nghiệp vụ giữa các service.
+- **Authentication**: Keycloak chịu trách nhiệm xác thực và cấp JWT Access Token. Token được gửi kèm các request để backend xác thực và phân quyền.
 
 ```text
                         ┌─────────────────────┐
-                        │      Keycloak        │  (xác thực / JWT / phân quyền)
-                        │   :8080               │
-                        └──────────┬───────────┘
+                        │      Keycloak       │  (xác thực / JWT / phân quyền)
+                        │   :8080             │
+                        └──────────┬──────────┘
                                    │
                    Access Token (JWT) đính kèm mọi request
                                    │
         ┌──────────────────────────┼──────────────────────────┐
         │                          │                          │
-┌───────▼────────┐        ┌────────▼─────────┐       ┌────────▼─────────┐
-│  user-service   │        │ internship-service│       │ evaluation-service│
-│  :8081          │        │  :8082             │       │  :8083            │
-│                 │        │                     │       │                    │
-│ - Quản lý User  │        │ - Đợt thực tập      │       │ - Đánh giá của     │
-│ - Sinh viên/    │        │ - Cơ hội thực tập   │       │   doanh nghiệp     │
-│   Giảng viên/   │        │ - Đăng ký/duyệt hồ sơ│      │ - Đánh giá của     │
-│   Doanh nghiệp  │        │ - Internship (post- │       │   giảng viên       │
-│   profile       │        │   approval)         │       │ - Tổng hợp điểm    │
-│                 │        │ - Work Plan / Task   │       │                    │
-│                 │        │ - Internship Log     │       │                    │
-└───────┬─────────┘        └────────┬─────────────┘       └────────┬───────────┘
+┌───────▼────────┐        ┌────────▼─────────────┐       ┌────────▼──────────┐
+│  user-service  │        │ internship-service   │       │ evaluation-service│
+│  :8081         │        │  :8082               │       │  :8083            │
+│                │        │                      │       │                   │
+│ - Quản lý User │        │ - Đợt thực tập       │       │ - Đánh giá của    │
+│ - Sinh viên/   │        │ - Cơ hội thực tập    │       │   doanh nghiệp    │
+│   Giảng viên/  │        │ - Đăng ký/duyệt hồ sơ│       │ - Đánh giá của    │
+│   Doanh nghiệp │        │ - Internship (post-  │       │   giảng viên      │
+│   profile      │        │   approval)          │       │ - Tổng hợp điểm   │
+│                │        │ - Work Plan / Task   │       │                   │
+│                │        │ - Internship Log     │       │                   │
+└───────┬────────┘        └────────┬─────────────┘       └────────┬──────────┘
         │                           │                              │
-┌───────▼────────┐        ┌─────────▼──────────┐       ┌───────────▼──────────┐
-│  user-db        │        │  internship-db      │       │  evaluation-db        │
-│  Postgres :5433 │        │  Postgres :5434      │       │  Postgres :5435        │
-└─────────────────┘        └──────────────────────┘       └────────────────────────┘
+┌───────▼─────────┐        ┌─────────▼──────────┐       ┌───────────▼──────────┐
+│  user-db        │        │  internship-db     │       │  evaluation-db       │
+│  Postgres :5433 │        │  Postgres :5434    │       │  Postgres :5435      │
+└─────────────────┘        └────────────────────┘       └──────────────────────┘
 
                         ┌──────────────────────┐
-                        │      frontend         │
-                        │  React + Vite :5173   │
-                        │  gọi trực tiếp cả 3    │
-                        │  service ở trên qua    │
-                        │  REST + JWT            │
+                        │      frontend        │
+                        │  React + Vite :5173  │
+                        │  gọi trực tiếp cả 3  │
+                        │  service ở trên qua  │
+                        │  REST + JWT          │
                         └──────────────────────┘
 ```
 
@@ -308,15 +326,17 @@ Hệ thống dùng Keycloak để đăng nhập và cấp JWT access token.
 - **Đợt thực tập (Internship Period)**: ADMIN tạo/sửa/mở/đóng đợt thực tập, phân công giảng viên phụ trách.
 - **Cơ hội thực tập (Opportunity)**: COMPANY tạo cơ hội thực tập (vị trí, mô tả, số lượng, trạng thái Đang mở/Đã đóng).
 - **Đăng ký thực tập (Registration)**: STUDENT ứng tuyển vào cơ hội; COMPANY duyệt → LECTURER duyệt (2 vòng duyệt tuần tự); từ chối ở bất kỳ vòng nào sẽ dừng hồ sơ.
-- **Internship**: được tạo tự động khi hồ sơ được duyệt qua cả 2 vòng, theo dõi trạng thái thực tập thực tế (đang thực tập → doanh nghiệp đã đánh giá → hoàn thành).
+- **Internship**: được tạo tự động khi hồ sơ đăng ký được doanh nghiệp và giảng viên phê duyệt. Hệ thống theo dõi quá trình thực tập qua các trạng thái IN_PROGRESS → COMPLETED_COMPANY → COMPLETED_LECTURER. Doanh nghiệp và giảng viên phải thực hiện xác nhận hoàn thành theo từng giai đoạn; hệ thống kiểm tra các đánh giá cần thiết trước khi cho phép chuyển trạng thái.
 - **Kế hoạch công việc (Work Plan)** và **Công việc (Task)**: doanh nghiệp lập kế hoạch, giao việc cụ thể cho sinh viên trong quá trình thực tập.
 - **Nhật ký thực tập (Internship Log)**: sinh viên ghi lại nhật ký hằng ngày/tuần trong quá trình thực tập.
 
 ### 9.3. `evaluation-service` (cổng 8083)
 
-- **Đánh giá của doanh nghiệp**: doanh nghiệp chấm điểm/nhận xét sinh viên sau khi kết thúc thực tập.
-- **Đánh giá của giảng viên**: giảng viên chấm điểm/nhận xét dựa trên theo dõi quá trình + báo cáo.
-- **Tổng hợp điểm**: tính điểm cuối cùng = 80% điểm doanh nghiệp + 20% điểm giảng viên; khi cả hai đánh giá tồn tại, hồ sơ được tự động chuyển sang trạng thái **HOÀN THÀNH**.
+- **Đánh giá của doanh nghiệp**: doanh nghiệp chấm điểm và nhận xét sinh viên sau quá trình thực tập. Sau khi gửi đánh giá, doanh nghiệp thực hiện xác nhận hoàn thành phần đánh giá của mình. Hệ thống kiểm tra đánh giá đã tồn tại và chuyển trạng thái Internship sang `COMPLETED_COMPANY`, Registration cũng chuyển sang `COMPLETED_COMPANY`.
+- **Đánh giá của giảng viên**: giảng viên chấm điểm và nhận xét sinh viên dựa trên quá trình theo dõi, kết quả thực hiện công việc và báo cáo thực tập.
+- **Tổng hợp điểm**: tính điểm cuối cùng theo công thức:
+  `Final Score = 80% × Company Score + 20% × Lecturer Score`.
+- **Xác nhận hoàn thành thực tập**: sau khi doanh nghiệp và giảng viên đều đã gửi đánh giá, giảng viên thực hiện xác nhận hoàn thành. Hệ thống kiểm tra sự tồn tại của cả hai đánh giá và trạng thái hoàn thành của doanh nghiệp trước khi cập nhật Registration sang `COMPLETED` và Internship sang `COMPLETED_LECTURER`.
 
 ### 9.4. `frontend`
 
