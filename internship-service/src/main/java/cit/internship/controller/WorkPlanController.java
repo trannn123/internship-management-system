@@ -80,6 +80,30 @@ public class WorkPlanController {
     public Response getWorkPlan(
             @PathParam("internshipId") Long internshipId
     ) {
+        Internship internship =
+                internshipService.getInternshipById(internshipId);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of(
+                            "status", 404,
+                            "message", "Internship not found"
+                    ))
+                    .build();
+        }
+
+        String role = currentUserService.getRole();
+        Long userId = currentUserService.getUserId();
+
+        if (!internshipService.canViewInternship(internship, role, userId)) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of(
+                            "status", 403,
+                            "message", "You do not have permission to view this work plan"
+                    ))
+                    .build();
+        }
+
         WorkPlan workPlan =
                 workPlanService.getWorkPlanByInternshipId(internshipId);
 
@@ -94,7 +118,5 @@ public class WorkPlanController {
 
         return Response.ok(workPlan).build();
     }
-
-
 
 }

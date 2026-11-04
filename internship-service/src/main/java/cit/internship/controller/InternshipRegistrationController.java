@@ -72,7 +72,7 @@ public class InternshipRegistrationController {
 
     @PUT
     @Path("/{id}/complete")
-    @RolesAllowed({"COMPANY", "LECTURER", "ADMIN"})
+    @RolesAllowed({"LECTURER", "ADMIN"})
     public Response completeRegistration(@PathParam("id") Long id) {
         return Response.ok(internshipRegistrationService.completeRegistration(id)).build();
     }

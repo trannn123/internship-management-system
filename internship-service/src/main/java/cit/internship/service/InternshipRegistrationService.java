@@ -206,11 +206,36 @@ public class InternshipRegistrationService {
             throw new BadRequestException("No registration record exists for this internship");
         }
 
-        if (registration.getStatus() == RegistrationStatus.IN_PROGRESS) {
-            registration.setStatus(RegistrationStatus.COMPLETED_COMPANY);
-            internship.setStatus(InternshipStatus.COMPLETED_COMPANY);
+        EvaluationExistenceResponse evaluationExistence;
+
+        try {
+            evaluationExistence = evaluationServiceClient.getEvaluationExistence(internshipId);
+        } catch (ProcessingException ex) {
+            throw new WebApplicationException(
+                    "Unable to reach evaluation-service",
+                    Response.Status.BAD_GATEWAY
+            );
+        } catch (WebApplicationException ex) {
+            throw new WebApplicationException(
+                    "Unable to verify company evaluation",
+                    Response.Status.BAD_GATEWAY
+            );
         }
 
+        if (evaluationExistence == null || !evaluationExistence.isCompanyEvaluationExists()) {
+            throw new BadRequestException(
+                    "Company evaluation must exist before completing the internship by company"
+            );
+        }
+
+        if (registration.getStatus() != RegistrationStatus.IN_PROGRESS) {
+            throw new BadRequestException(
+                    "Only internships in IN_PROGRESS status can be completed by company"
+            );
+        }
+
+        registration.setStatus(RegistrationStatus.COMPLETED_COMPANY);
+        internship.setStatus(InternshipStatus.COMPLETED_COMPANY);
         return toResponse(registration);
     }
 
@@ -219,9 +244,10 @@ public class InternshipRegistrationService {
         InternshipRegistration registration = requireRegistration(id);
         enforceCompletionAccess(registration);
 
-        if (registration.getStatus() != RegistrationStatus.IN_PROGRESS
-                && registration.getStatus() != RegistrationStatus.COMPLETED_COMPANY) {
-            throw new BadRequestException("Registration is not in progress");
+        if (registration.getStatus() != RegistrationStatus.COMPLETED_COMPANY) {
+            throw new BadRequestException(
+                    "Company must complete the internship before final completion"
+            );
         }
 
         Internship internship = internshipService.getInternshipByRegistrationId(registration.getId());
@@ -283,30 +309,33 @@ public class InternshipRegistrationService {
             return;
         }
 
-        // If no lecturer has been assigned to the period yet, keep the registration pending company first and retry assignment on company approval.
-        registration.setLecturerId(selectLecturerId(registration.getPeriodId()));
+       registration.setLecturerId(selectLecturerId(registration.getPeriodId()));
     }
+
 
     private void enforceCompletionAccess(InternshipRegistration registration) {
         String role = currentUserService.getRole();
-        Long currentUserId = currentUserService.getUserId();
 
-        switch (role) {
-            case "ADMIN":
-                return;
-            case "COMPANY":
-                if (!registration.getCompanyId().equals(currentUserId)) {
-                    throw new ForbiddenException("You do not have permission to complete this registration");
-                }
-                return;
-            case "LECTURER":
-                if (registration.getLecturerId() == null || !registration.getLecturerId().equals(currentUserId)) {
-                    throw new ForbiddenException("You do not have permission to complete this registration");
-                }
-                return;
-            default:
-                throw new ForbiddenException("You do not have permission to complete this registration");
+        if ("ADMIN".equals(role)) {
+            return;
         }
+
+        if ("LECTURER".equals(role)) {
+            Long currentUserId = currentUserService.getUserId();
+
+            if (registration.getLecturerId() == null
+                    || !registration.getLecturerId().equals(currentUserId)) {
+                throw new ForbiddenException(
+                        "You do not have permission to complete this registration"
+                );
+            }
+
+            return;
+        }
+
+        throw new ForbiddenException(
+                "Only the assigned lecturer or an administrator can complete this registration"
+        );
     }
 
     private void ensureEvaluationsExist(Long internshipId) {

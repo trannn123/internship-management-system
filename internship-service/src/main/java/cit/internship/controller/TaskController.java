@@ -15,6 +15,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.Authenticated;
+import cit.internship.entity.Internship;
 
 import java.util.List;
 import java.util.Map;
@@ -85,6 +86,7 @@ public class TaskController {
                 .build();
     }
 
+
     @GET
     @Path("/work-plan/{workPlanId}")
     public Response getTasksByWorkPlan(
@@ -102,6 +104,30 @@ public class TaskController {
                     .build();
         }
 
+        Internship internship =
+                internshipService.getInternshipById(workPlan.getInternshipId());
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of(
+                            "status", 404,
+                            "message", "Internship not found"
+                    ))
+                    .build();
+        }
+
+        String role = currentUserService.getRole();
+        Long userId = currentUserService.getUserId();
+
+        if (!internshipService.canViewInternship(internship, role, userId)) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of(
+                            "status", 403,
+                            "message", "You do not have permission to view tasks in this work plan"
+                    ))
+                    .build();
+        }
+
         List<Task> tasks =
                 taskService.getTasksByWorkPlanId(workPlanId);
 
@@ -115,6 +141,46 @@ public class TaskController {
 
         if (task == null) {
             return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of(
+                            "status", 404,
+                            "message", "Task not found"
+                    ))
+                    .build();
+        }
+
+        WorkPlan workPlan =
+                workPlanService.getWorkPlanById(task.getWorkPlanId());
+
+        if (workPlan == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of(
+                            "status", 404,
+                            "message", "Work plan not found"
+                    ))
+                    .build();
+        }
+
+        Internship internship =
+                internshipService.getInternshipById(workPlan.getInternshipId());
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of(
+                            "status", 404,
+                            "message", "Internship not found"
+                    ))
+                    .build();
+        }
+
+        String role = currentUserService.getRole();
+        Long userId = currentUserService.getUserId();
+
+        if (!internshipService.canViewInternship(internship, role, userId)) {
+            return Response.status(Response.Status.FORBIDDEN)
+                    .entity(Map.of(
+                            "status", 403,
+                            "message", "You do not have permission to view this task"
+                    ))
                     .build();
         }
 

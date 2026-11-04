@@ -11,6 +11,7 @@ import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.Authenticated;
+import cit.internship.service.InternshipRegistrationService;
 
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,9 @@ public class InternshipController {
 
     @Inject
     InternshipService internshipService;
+
+    @Inject
+    InternshipRegistrationService internshipRegistrationService;
 
     @Inject
     CurrentUserService currentUserService;
@@ -95,7 +99,24 @@ public class InternshipController {
                     .build();
         }
 
-        // Students must use /api/internship-registrations so company/lecturer assignments are derived server-side from the official workflow.
+        if (request.getCompanyId() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of(
+                            "status", 400,
+                            "message", "companyId is required"
+                    ))
+                    .build();
+        }
+
+        if (request.getLecturerId() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of(
+                            "status", 400,
+                            "message", "lecturerId is required"
+                    ))
+                    .build();
+        }
+
         Internship internship =
                 internshipService.createInternship(request, request.getStudentId());
 
@@ -171,20 +192,37 @@ public class InternshipController {
         return Response.ok(internship).build();
     }
 
+
     @PUT
     @Path("/{id}/complete-company")
     @RolesAllowed("COMPANY")
     public Response completeByCompany(@PathParam("id") Long id) {
         Long companyId = currentUserService.getUserId();
 
-        Internship internship = internshipService.completeByCompany(id, companyId);
+        Internship internship = internshipService.getInternshipById(id);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response.ok(internship).build();
+        if (internship.getCompanyId() == null || !internship.getCompanyId().equals(companyId)) {
+            throw new ForbiddenException(
+                    "You do not have permission to complete this internship"
+            );
+        }
+
+        if (internship.getRegistrationId() != null) {
+            internshipRegistrationService.completeByCompanyEvaluation(id, companyId);
+        } else {
+            throw new BadRequestException(
+                    "Completion of internships without registration is not supported yet"
+            );
+        }
+
+        Internship updatedInternship = internshipService.getInternshipById(id);
+        return Response.ok(updatedInternship).build();
     }
+
 
     @PUT
     @Path("/{id}/complete-lecturer")
@@ -192,13 +230,30 @@ public class InternshipController {
     public Response completeByLecturer(@PathParam("id") Long id) {
         Long lecturerId = currentUserService.getUserId();
 
-        Internship internship = internshipService.completeByLecturer(id, lecturerId);
+        Internship internship = internshipService.getInternshipById(id);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response.ok(internship).build();
+        if (internship.getLecturerId() == null || !internship.getLecturerId().equals(lecturerId)) {
+            throw new ForbiddenException(
+                    "You do not have permission to complete this internship"
+            );
+        }
+
+        if (internship.getRegistrationId() != null) {
+            internshipRegistrationService.completeRegistration(
+                    internship.getRegistrationId()
+            );
+        } else {
+            throw new BadRequestException(
+                    "Completion of internships without registration is not supported yet"
+            );
+        }
+
+        Internship updatedInternship = internshipService.getInternshipById(id);
+        return Response.ok(updatedInternship).build();
     }
 
     @GET
