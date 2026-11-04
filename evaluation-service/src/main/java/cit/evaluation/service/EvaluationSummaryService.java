@@ -11,6 +11,8 @@ import cit.evaluation.repository.LecturerEvaluationRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import jakarta.ws.rs.ForbiddenException;
+import jakarta.ws.rs.WebApplicationException;
 
 @ApplicationScoped
 public class EvaluationSummaryService {
@@ -25,13 +27,25 @@ public class EvaluationSummaryService {
     @RestClient
     InternshipServiceClient internshipServiceClient;
 
+
     public boolean canViewSummary(
             Long internshipId,
             Long userId,
             String role) {
 
-        InternshipResponse internship =
-                internshipServiceClient.getInternshipById(internshipId);
+        InternshipResponse internship;
+
+        try {
+            internship = internshipServiceClient.getInternshipById(internshipId);
+        } catch (WebApplicationException e) {
+            if (e.getResponse() != null
+                    && e.getResponse().getStatus() == 403) {
+                throw new ForbiddenException(
+                        "You do not have permission to view this internship");
+            }
+
+            throw e;
+        }
 
         if (internship == null) {
             return false;
@@ -59,49 +73,62 @@ public class EvaluationSummaryService {
         return false;
     }
 
-    public EvaluationSummaryResponse getSummary(Long internshipId) {
+    public EvaluationSummaryResponse getSummary(
+            Long internshipId,
+            String role) {
 
         CompanyEvaluation companyEvaluation =
-                companyEvaluationRepository.findByInternshipId(
-                        internshipId
-                );
+                companyEvaluationRepository.findByInternshipId(internshipId);
 
         LecturerEvaluation lecturerEvaluation =
-                lecturerEvaluationRepository.findByInternshipId(
-                        internshipId
-                );
+                lecturerEvaluationRepository.findByInternshipId(internshipId);
 
-        EvaluationSummaryResponse response =
-                new EvaluationSummaryResponse();
+        boolean hasCompanyEvaluation = companyEvaluation != null;
+        boolean hasLecturerEvaluation = lecturerEvaluation != null;
+        boolean hasFinalScore = hasCompanyEvaluation && hasLecturerEvaluation;
 
+        if ("STUDENT".equals(role) && !hasFinalScore) {
+            throw new jakarta.ws.rs.ForbiddenException(
+                    "Final score is not available yet");
+        }
+
+        if ("STUDENT".equals(role)) {
+            EvaluationSummaryResponse studentResponse =
+                    new EvaluationSummaryResponse();
+
+            studentResponse.setInternshipId(internshipId);
+
+            double finalScore = Math.round(
+                    (companyEvaluation.getScore() * 0.8
+                            + lecturerEvaluation.getScore() * 0.2) * 100.0
+            ) / 100.0;
+
+            studentResponse.setFinalScore(finalScore);
+
+            return studentResponse;
+        }
+
+        EvaluationSummaryResponse response = new EvaluationSummaryResponse();
         response.setInternshipId(internshipId);
 
-        if (companyEvaluation != null) {
-            response.setCompanyScore(
-                    companyEvaluation.getScore()
-            );
+        boolean canSeeCompanyEvaluation =
+                !"LECTURER".equals(role) || hasLecturerEvaluation;
 
-            response.setCompanyComment(
-                    companyEvaluation.getComment()
-            );
+        if (hasCompanyEvaluation && canSeeCompanyEvaluation) {
+            response.setCompanyScore(companyEvaluation.getScore());
+            response.setCompanyComment(companyEvaluation.getComment());
         }
 
-        if (lecturerEvaluation != null) {
-            response.setLecturerScore(
-                    lecturerEvaluation.getScore()
-            );
-
-            response.setLecturerComment(
-                    lecturerEvaluation.getComment()
-            );
+        if (hasLecturerEvaluation) {
+            response.setLecturerScore(lecturerEvaluation.getScore());
+            response.setLecturerComment(lecturerEvaluation.getComment());
         }
 
-        if (companyEvaluation != null
-                && lecturerEvaluation != null) {
-
-            double finalScore =
+        if (hasFinalScore) {
+            double finalScore = Math.round(
                     (companyEvaluation.getScore() * 0.8
-                            + lecturerEvaluation.getScore() * 0.2);
+                            + lecturerEvaluation.getScore() * 0.2) * 100.0
+            ) / 100.0;
 
             response.setFinalScore(finalScore);
         }

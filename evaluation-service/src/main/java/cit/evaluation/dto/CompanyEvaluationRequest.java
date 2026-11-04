@@ -6,10 +6,9 @@ import jakarta.validation.constraints.NotNull;
 
 public class CompanyEvaluationRequest {
 
-    @NotNull
-//    TODO: Will check
-//    @DecimalMin("0.0")
-//    @DecimalMax("10.0")
+    @NotNull(message = "Score is required")
+    @DecimalMin(value = "0.0", message = "Score must be at least 0")
+    @DecimalMax(value = "10.0", message = "Score must not exceed 10")
     private Double score;
 
     private String comment;

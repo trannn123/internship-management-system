@@ -42,8 +42,7 @@ public class EvaluationSummaryController {
                     .build();
         }
 
-        EvaluationSummaryResponse response =
-                evaluationSummaryService.getSummary(internshipId);
+        EvaluationSummaryResponse response = evaluationSummaryService.getSummary(internshipId, role);
 
         return Response.ok(response).build();
     }

@@ -9,7 +9,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import cit.evaluation.client.internship.InternshipServiceClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
-
+import cit.evaluation.repository.LecturerEvaluationRepository;
 import java.time.LocalDateTime;
 
 @ApplicationScoped
@@ -17,6 +17,9 @@ public class CompanyEvaluationService {
 
     @Inject
     CompanyEvaluationRepository companyEvaluationRepository;
+
+    @Inject
+    LecturerEvaluationRepository lecturerEvaluationRepository;
 
     @Inject
     @RestClient
@@ -43,6 +46,11 @@ public class CompanyEvaluationService {
                 || !internship.getCompanyId().equals(companyId)) {
             throw new IllegalArgumentException(
                     "You do not have permission to evaluate this internship");
+        }
+
+        if (!"IN_PROGRESS".equals(internship.getStatus())) {
+            throw new jakarta.ws.rs.BadRequestException(
+                    "Company evaluation is only allowed when internship is IN_PROGRESS");
         }
 
         CompanyEvaluation existingEvaluation =
@@ -83,8 +91,15 @@ public class CompanyEvaluationService {
         }
 
         if ("LECTURER".equals(role)) {
-            return internship.getLecturerId() != null
-                    && internship.getLecturerId().equals(userId);
+
+            if (internship.getLecturerId() == null
+                    || !internship.getLecturerId().equals(userId)) {
+                return false;
+            }
+
+            return lecturerEvaluationRepository
+                    .findByLecturerIdAndInternshipId(userId, internshipId)
+                    != null;
         }
 
         return false;

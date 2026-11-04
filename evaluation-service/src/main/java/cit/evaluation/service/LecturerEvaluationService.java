@@ -75,6 +75,11 @@ public class LecturerEvaluationService {
                     "You do not have permission to evaluate this internship");
         }
 
+        if (!"COMPLETED_COMPANY".equals(internship.getStatus())) {
+            throw new jakarta.ws.rs.BadRequestException(
+                    "Lecturer evaluation is only allowed when internship is COMPLETED_COMPANY");
+        }
+
         LecturerEvaluation existingEvaluation =
                 lecturerEvaluationRepository
                         .findByInternshipId(internshipId);
