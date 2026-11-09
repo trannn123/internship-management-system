@@ -14,6 +14,7 @@ import java.util.Map;
 public class CurrentUserService {
 
     private static final Logger log = LoggerFactory.getLogger(CurrentUserService.class);
+
     @Inject
     @RestClient
     UserServiceClient userServiceClient;

@@ -32,51 +32,37 @@ public class CompanyEvaluationService {
     }
 
     @Transactional
-    public CompanyEvaluation createEvaluation(
-            Long internshipId,
-            Long companyId,
-            CompanyEvaluationRequest request) {
-
-        InternshipResponse internship =
-                internshipServiceClient.getInternshipById(internshipId);
+    public CompanyEvaluation createEvaluation(Long internshipId, Long companyId, CompanyEvaluationRequest request) {
+        InternshipResponse internship = internshipServiceClient.getInternshipById(internshipId);
 
         if (internship == null) {
             throw new IllegalArgumentException("Internship not found");
         }
 
-        if (internship.getCompanyId() == null
-                || !internship.getCompanyId().equals(companyId)) {
-            throw new IllegalArgumentException(
-                    "You do not have permission to evaluate this internship");
+        if (internship.getCompanyId() == null || !internship.getCompanyId().equals(companyId)) {
+            throw new IllegalArgumentException("You do not have permission to evaluate this internship");
         }
 
         if (!"IN_PROGRESS".equals(internship.getStatus())) {
-            throw new jakarta.ws.rs.BadRequestException(
-                    "Company evaluation is only allowed when internship is IN_PROGRESS");
+            throw new jakarta.ws.rs.BadRequestException("Company evaluation is only allowed when internship is IN_PROGRESS");
         }
 
-        InternshipPeriodEndDateResponse periodResponse =
-                internshipServiceClient.getInternshipPeriodEndDate(internshipId);
+        InternshipPeriodEndDateResponse periodResponse = internshipServiceClient.getInternshipPeriodEndDate(internshipId);
 
-        if (periodResponse == null
-                || periodResponse.getInternshipEndDate() == null) {
-            throw new jakarta.ws.rs.BadRequestException(
-                    "Internship period end date is not available");
+        if (periodResponse == null || periodResponse.getInternshipEndDate() == null) {
+            throw new jakarta.ws.rs.BadRequestException("Internship period end date is not available");
         }
 
         LocalDate internshipEndDate = periodResponse.getInternshipEndDate();
 
         if (!LocalDate.now().isAfter(internshipEndDate)) {
-            throw new jakarta.ws.rs.BadRequestException(
-                    "Company evaluation is only allowed after the internship period ends");
+            throw new jakarta.ws.rs.BadRequestException("Company evaluation is only allowed after the internship period ends");
         }
 
-        CompanyEvaluation existingEvaluation =
-                companyEvaluationRepository.findByInternshipId(internshipId);
+        CompanyEvaluation existingEvaluation = companyEvaluationRepository.findByInternshipId(internshipId);
 
         if (existingEvaluation != null) {
-            throw new IllegalArgumentException(
-                    "Company evaluation already exists for this internship");
+            throw new IllegalArgumentException("Company evaluation already exists for this internship");
         }
 
         CompanyEvaluation evaluation = new CompanyEvaluation();
@@ -91,33 +77,23 @@ public class CompanyEvaluationService {
         return evaluation;
     }
 
-    public boolean canViewEvaluation(
-            Long internshipId,
-            Long userId,
-            String role) {
-
-        InternshipResponse internship =
-                internshipServiceClient.getInternshipById(internshipId);
+    public boolean canViewEvaluation(Long internshipId, Long userId, String role) {
+        InternshipResponse internship = internshipServiceClient.getInternshipById(internshipId);
 
         if (internship == null) {
             return false;
         }
 
         if ("COMPANY".equals(role)) {
-            return internship.getCompanyId() != null
-                    && internship.getCompanyId().equals(userId);
+            return internship.getCompanyId() != null && internship.getCompanyId().equals(userId);
         }
 
         if ("LECTURER".equals(role)) {
-
-            if (internship.getLecturerId() == null
-                    || !internship.getLecturerId().equals(userId)) {
+            if (internship.getLecturerId() == null || !internship.getLecturerId().equals(userId)) {
                 return false;
             }
 
-            return lecturerEvaluationRepository
-                    .findByLecturerIdAndInternshipId(userId, internshipId)
-                    != null;
+            return lecturerEvaluationRepository.findByLecturerIdAndInternshipId(userId, internshipId) != null;
         }
 
         return false;

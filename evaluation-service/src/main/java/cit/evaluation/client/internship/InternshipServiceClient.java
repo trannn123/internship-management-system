@@ -17,13 +17,9 @@ public interface InternshipServiceClient {
 
     @GET
     @Path("/{id}")
-    InternshipResponse getInternshipById(
-            @PathParam("id") Long id
-    );
+    InternshipResponse getInternshipById(@PathParam("id") Long id);
 
     @GET
     @Path("/{id}/period-end-date")
-    InternshipPeriodEndDateResponse getInternshipPeriodEndDate(
-            @PathParam("id") Long id
-    );
+    InternshipPeriodEndDateResponse getInternshipPeriodEndDate(@PathParam("id") Long id);
 }

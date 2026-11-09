@@ -9,20 +9,13 @@ import org.eclipse.microprofile.rest.client.ext.ClientHeadersFactory;
 public class AuthorizationHeadersFactory implements ClientHeadersFactory {
 
     @Override
-    public MultivaluedMap<String, String> update(
-            MultivaluedMap<String, String> incomingHeaders,
-            MultivaluedMap<String, String> clientOutgoingHeaders) {
-
-        MultivaluedMap<String, String> headers =
-                new MultivaluedHashMap<>();
-
-        String authorization =
-                incomingHeaders.getFirst("Authorization");
+    public MultivaluedMap<String, String> update(MultivaluedMap<String, String> incomingHeaders, MultivaluedMap<String, String> clientOutgoingHeaders) {
+        MultivaluedMap<String, String> headers = new MultivaluedHashMap<>();
+        String authorization = incomingHeaders.getFirst("Authorization");
 
         if (authorization != null) {
             headers.putSingle("Authorization", authorization);
         }
-
         return headers;
     }
 }

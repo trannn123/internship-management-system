@@ -25,39 +25,20 @@ public class CompanyEvaluationController {
     @POST
     @Path("/{internshipId}")
     @RolesAllowed("COMPANY")
-    public Response createEvaluation(
-            @PathParam("internshipId") Long internshipId,
-            @Valid CompanyEvaluationRequest request
-    ) {
+    public Response createEvaluation(@PathParam("internshipId") Long internshipId, @Valid CompanyEvaluationRequest request) {
         Long companyId = currentUserService.getUserId();
-
-        CompanyEvaluation evaluation =
-                companyEvaluationService.createEvaluation(
-                        internshipId,
-                        companyId,
-                        request
-                );
-
-        return Response.status(Response.Status.CREATED)
-                .entity(evaluation)
-                .build();
+        CompanyEvaluation evaluation = companyEvaluationService.createEvaluation(internshipId, companyId, request);
+        return Response.status(Response.Status.CREATED).entity(evaluation).build();
     }
 
     @GET
     @Path("/{internshipId}")
     @RolesAllowed({"COMPANY", "LECTURER"})
-    public Response getEvaluation(
-            @PathParam("internshipId") Long internshipId
-    ) {
+    public Response getEvaluation(@PathParam("internshipId") Long internshipId) {
         String role = currentUserService.getRole();
         Long userId = currentUserService.getUserId();
 
-        boolean canView =
-                companyEvaluationService.canViewEvaluation(
-                        internshipId,
-                        userId,
-                        role
-                );
+        boolean canView = companyEvaluationService.canViewEvaluation(internshipId, userId, role);
 
         if (!canView) {
             return Response.status(Response.Status.FORBIDDEN)
@@ -65,10 +46,7 @@ public class CompanyEvaluationController {
                     .build();
         }
 
-        CompanyEvaluation evaluation =
-                companyEvaluationService.getEvaluationByInternshipId(
-                        internshipId
-                );
+        CompanyEvaluation evaluation = companyEvaluationService.getEvaluationByInternshipId(internshipId);
 
         if (evaluation == null) {
             return Response.status(Response.Status.NOT_FOUND)

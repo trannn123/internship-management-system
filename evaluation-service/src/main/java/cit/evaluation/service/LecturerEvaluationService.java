@@ -22,75 +22,51 @@ public class LecturerEvaluationService {
     @RestClient
     InternshipServiceClient internshipServiceClient;
 
-    public LecturerEvaluation getEvaluationByInternshipId(
-            Long internshipId) {
-
-        return lecturerEvaluationRepository
-                .findByInternshipId(internshipId);
+    public LecturerEvaluation getEvaluationByInternshipId(Long internshipId) {
+        return lecturerEvaluationRepository.findByInternshipId(internshipId);
     }
 
-    public boolean canViewEvaluation(
-            Long internshipId,
-            Long userId,
-            String role) {
-
-        InternshipResponse internship =
-                internshipServiceClient.getInternshipById(internshipId);
+    public boolean canViewEvaluation(Long internshipId, Long userId, String role) {
+        InternshipResponse internship = internshipServiceClient.getInternshipById(internshipId);
 
         if (internship == null) {
             return false;
         }
 
         if ("LECTURER".equals(role)) {
-            return internship.getLecturerId() != null
-                    && internship.getLecturerId().equals(userId);
+            return internship.getLecturerId() != null && internship.getLecturerId().equals(userId);
         }
 
         if ("COMPANY".equals(role)) {
-            return internship.getCompanyId() != null
-                    && internship.getCompanyId().equals(userId);
+            return internship.getCompanyId() != null && internship.getCompanyId().equals(userId);
         }
 
         return false;
     }
 
     @Transactional
-    public LecturerEvaluation createEvaluation(
-            Long internshipId,
-            Long lecturerId,
-            LecturerEvaluationRequest request) {
-
-        InternshipResponse internship =
-                internshipServiceClient.getInternshipById(internshipId);
+    public LecturerEvaluation createEvaluation(Long internshipId, Long lecturerId, LecturerEvaluationRequest request) {
+        InternshipResponse internship = internshipServiceClient.getInternshipById(internshipId);
 
         if (internship == null) {
-            throw new IllegalArgumentException(
-                    "Internship not found");
+            throw new IllegalArgumentException("Internship not found");
         }
 
-        if (internship.getLecturerId() == null
-                || !internship.getLecturerId().equals(lecturerId)) {
-
-            throw new IllegalArgumentException(
-                    "You do not have permission to evaluate this internship");
+        if (internship.getLecturerId() == null || !internship.getLecturerId().equals(lecturerId)) {
+            throw new IllegalArgumentException("You do not have permission to evaluate this internship");
         }
 
         if (!"COMPLETED_COMPANY".equals(internship.getStatus())) {
-            throw new jakarta.ws.rs.BadRequestException(
-                    "Lecturer evaluation is only allowed when internship is COMPLETED_COMPANY");
+            throw new jakarta.ws.rs.BadRequestException("Lecturer evaluation is only allowed when internship is COMPLETED_COMPANY");
         }
 
-        LecturerEvaluation existingEvaluation =
-                lecturerEvaluationRepository
-                        .findByInternshipId(internshipId);
+        LecturerEvaluation existingEvaluation = lecturerEvaluationRepository.findByInternshipId(internshipId);
 
         if (existingEvaluation != null) {
-            throw new IllegalArgumentException(
-                    "Lecturer evaluation already exists for this internship");
+            throw new IllegalArgumentException("Lecturer evaluation already exists for this internship");
         }
 
-        LecturerEvaluation evaluation =
-                new LecturerEvaluation();
+        LecturerEvaluation evaluation = new LecturerEvaluation();
 
         evaluation.setInternshipId(internshipId);
         evaluation.setLecturerId(lecturerId);

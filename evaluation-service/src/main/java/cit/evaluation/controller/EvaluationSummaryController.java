@@ -23,18 +23,11 @@ public class EvaluationSummaryController {
     @GET
     @Path("/{internshipId}")
     @RolesAllowed({"STUDENT", "COMPANY", "LECTURER"})
-    public Response getSummary(
-            @PathParam("internshipId") Long internshipId
-    ) {
+    public Response getSummary(@PathParam("internshipId") Long internshipId) {
         String role = currentUserService.getRole();
         Long userId = currentUserService.getUserId();
 
-        boolean canView =
-                evaluationSummaryService.canViewSummary(
-                        internshipId,
-                        userId,
-                        role
-                );
+        boolean canView = evaluationSummaryService.canViewSummary(internshipId, userId, role);
 
         if (!canView) {
             return Response.status(Response.Status.FORBIDDEN)
@@ -50,20 +43,11 @@ public class EvaluationSummaryController {
     @GET
     @Path("/{internshipId}/exists")
     @RolesAllowed({"ADMIN", "COMPANY", "LECTURER"})
-    public Response getEvaluationExistence(
-            @PathParam("internshipId") Long internshipId
-    ) {
+    public Response getEvaluationExistence(@PathParam("internshipId") Long internshipId) {
         String role = currentUserService.getRole();
-        Long userId = "ADMIN".equals(role)
-                ? null
-                : currentUserService.getUserId();
+        Long userId = "ADMIN".equals(role) ? null : currentUserService.getUserId();
 
-        boolean canView =
-                evaluationSummaryService.canViewSummary(
-                        internshipId,
-                        userId,
-                        role
-                );
+        boolean canView = evaluationSummaryService.canViewSummary(internshipId, userId, role);
 
         if (!canView) {
             return Response.status(Response.Status.FORBIDDEN)
@@ -71,10 +55,7 @@ public class EvaluationSummaryController {
                     .build();
         }
 
-        EvaluationExistenceResponse response =
-                evaluationSummaryService.getEvaluationExistence(
-                        internshipId
-                );
+        EvaluationExistenceResponse response = evaluationSummaryService.getEvaluationExistence(internshipId);
 
         return Response.ok(response).build();
     }

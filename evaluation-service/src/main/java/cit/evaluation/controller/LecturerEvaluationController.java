@@ -25,18 +25,9 @@ public class LecturerEvaluationController {
     @POST
     @Path("/{internshipId}")
     @RolesAllowed("LECTURER")
-    public Response createEvaluation(
-            @PathParam("internshipId") Long internshipId,
-            @Valid LecturerEvaluationRequest request
-    ) {
+    public Response createEvaluation(@PathParam("internshipId") Long internshipId, @Valid LecturerEvaluationRequest request) {
         Long lecturerId = currentUserService.getUserId();
-
-        LecturerEvaluation evaluation =
-                lecturerEvaluationService.createEvaluation(
-                        internshipId,
-                        lecturerId,
-                        request
-                );
+        LecturerEvaluation evaluation = lecturerEvaluationService.createEvaluation(internshipId, lecturerId, request);
 
         return Response.status(Response.Status.CREATED)
                 .entity(evaluation)
@@ -46,18 +37,11 @@ public class LecturerEvaluationController {
     @GET
     @Path("/{internshipId}")
     @RolesAllowed({"LECTURER", "COMPANY"})
-    public Response getEvaluation(
-            @PathParam("internshipId") Long internshipId
-    ) {
+    public Response getEvaluation(@PathParam("internshipId") Long internshipId) {
         String role = currentUserService.getRole();
         Long userId = currentUserService.getUserId();
 
-        boolean canView =
-                lecturerEvaluationService.canViewEvaluation(
-                        internshipId,
-                        userId,
-                        role
-                );
+        boolean canView = lecturerEvaluationService.canViewEvaluation(internshipId, userId, role);
 
         if (!canView) {
             return Response.status(Response.Status.FORBIDDEN)
@@ -65,10 +49,7 @@ public class LecturerEvaluationController {
                     .build();
         }
 
-        LecturerEvaluation evaluation =
-                lecturerEvaluationService.getEvaluationByInternshipId(
-                        internshipId
-                );
+        LecturerEvaluation evaluation = lecturerEvaluationService.getEvaluationByInternshipId(internshipId);
 
         if (evaluation == null) {
             return Response.status(Response.Status.NOT_FOUND)
