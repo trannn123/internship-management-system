@@ -12,14 +12,7 @@ public class MeResponse {
     public MeResponse() {
     }
 
-    public MeResponse(
-            Long id,
-            String keycloakUserId,
-            String fullName,
-            String email,
-            String role,
-            Object profile) {
-
+    public MeResponse(Long id, String keycloakUserId, String fullName, String email, String role, Object profile) {
         this.id = id;
         this.keycloakUserId = keycloakUserId;
         this.fullName = fullName;

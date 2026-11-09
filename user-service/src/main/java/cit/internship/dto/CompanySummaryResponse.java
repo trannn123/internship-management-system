@@ -14,15 +14,7 @@ public class CompanySummaryResponse {
     public CompanySummaryResponse() {
     }
 
-    public CompanySummaryResponse(
-            Long id,
-            Long userId,
-            String fullName,
-            String email,
-            String companyName,
-            String taxCode,
-            String address,
-            String phone) {
+    public CompanySummaryResponse(Long id, Long userId, String fullName, String email, String companyName, String taxCode, String address, String phone) {
         this.id = id;
         this.userId = userId;
         this.fullName = fullName;

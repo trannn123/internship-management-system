@@ -51,8 +51,7 @@ public class UserController {
                         lecturer.getUser() != null ? lecturer.getUser().getEmail() : null,
                         lecturer.getLecturerCode(),
                         lecturer.getDepartment()
-                ))
-                .toList();
+                )).toList();
     }
 
     @GET
@@ -77,35 +76,16 @@ public class UserController {
                 .orElse(null);
 
         if (role == null) {
-            return Response
-                    .status(Response.Status.FORBIDDEN)
-                    .build();
+            return Response.status(Response.Status.FORBIDDEN).build();
         }
 
-        User user = profileService.getOrCreateUser(
-                keycloakUserId,
-                fullName,
-                email,
-                role
-        );
+        User user = profileService.getOrCreateUser(keycloakUserId, fullName, email, role);
 
-        Object profile = profileService.getProfile(
-                user,
-                role
-        );
+        Object profile = profileService.getProfile(user, role);
 
-        MeResponse response = new MeResponse(
-                user.getId(),
-                user.getKeycloakUserId(),
-                user.getFullName(),
-                user.getEmail(),
-                role,
-                profile
-        );
+        MeResponse response = new MeResponse(user.getId(), user.getKeycloakUserId(), user.getFullName(), user.getEmail(), role, profile);
 
-        return Response
-                .ok(response)
-                .build();
+        return Response.ok(response).build();
     }
 
     @PUT
@@ -117,9 +97,7 @@ public class UserController {
         User user = userService.getUserByKeycloakUserId(keycloakUserId);
 
         if (user == null) {
-            return Response
-                    .status(Response.Status.NOT_FOUND)
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
         profileService.updateStudentProfile(user, request);
@@ -135,9 +113,7 @@ public class UserController {
                 profile
         );
 
-        return Response
-                .ok(response)
-                .build();
+        return Response.ok(response).build();
     }
 
     @PUT
@@ -262,14 +238,10 @@ public class UserController {
         User user = userService.getUserById(id);
 
         if (user == null) {
-            return Response
-                    .status(Response.Status.NOT_FOUND)
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response
-                .ok(user)
-                .build();
+        return Response.ok(user).build();
     }
 
     @POST
@@ -277,30 +249,20 @@ public class UserController {
     public Response createUser(@Valid UserRequest request) {
         User user = userService.createUser(request);
 
-        return Response
-                .status(Response.Status.CREATED)
-                .entity(user)
-                .build();
+        return Response.status(Response.Status.CREATED).entity(user).build();
     }
 
     @PUT
     @Path("/{id}")
     @RolesAllowed("ADMIN")
-    public Response updateUser(
-            @PathParam("id") Long id,
-            @Valid UserRequest request) {
-
+    public Response updateUser(@PathParam("id") Long id, @Valid UserRequest request) {
         User user = userService.updateUser(id, request);
 
         if (user == null) {
-            return Response
-                    .status(Response.Status.NOT_FOUND)
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response
-                .ok(user)
-                .build();
+        return Response.ok(user).build();
     }
 
     @DELETE
@@ -311,13 +273,9 @@ public class UserController {
         boolean deleted = userService.deleteUser(id);
 
         if (!deleted) {
-            return Response
-                    .status(Response.Status.NOT_FOUND)
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        return Response
-                .noContent()
-                .build();
+        return Response.noContent().build();
     }
 }

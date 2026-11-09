@@ -34,12 +34,7 @@ public class ProfileService {
     CompanyRepository companyRepository;
 
     @Transactional
-    public User getOrCreateUser(
-            String keycloakUserId,
-            String fullName,
-            String email,
-            String role) {
-
+    public User getOrCreateUser(String keycloakUserId, String fullName, String email, String role) {
         User user = userRepository.find("keycloakUserId", keycloakUserId).firstResult();
 
         if (user != null) {
@@ -62,11 +57,7 @@ public class ProfileService {
             return user;
         }
 
-        user = new User(
-                keycloakUserId,
-                fullName,
-                email
-        );
+        user = new User(keycloakUserId, fullName, email);
 
         userRepository.persist(user);
 
@@ -77,13 +68,10 @@ public class ProfileService {
 
     @Transactional
     public Student updateStudentProfile(User user, StudentProfileRequest request) {
-
         Student student = studentRepository.find("user", user).firstResult();
 
         if (student == null) {
-            throw new IllegalArgumentException(
-                    "Student profile not found"
-            );
+            throw new IllegalArgumentException("Student profile not found");
         }
 
         student.setStudentCode(request.getStudentCode());
@@ -146,9 +134,7 @@ public class ProfileService {
                 break;
 
             default:
-                throw new IllegalArgumentException(
-                        "Unsupported role: " + role
-                );
+                throw new IllegalArgumentException("Unsupported role: " + role);
         }
     }
 
@@ -202,9 +188,7 @@ public class ProfileService {
                 return null;
 
             default:
-                throw new IllegalArgumentException(
-                        "Unsupported role: " + role
-                );
+                throw new IllegalArgumentException("Unsupported role: " + role);
         }
     }
 }

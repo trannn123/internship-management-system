@@ -11,13 +11,7 @@ public class StudentProfileResponse {
     public StudentProfileResponse() {
     }
 
-    public StudentProfileResponse(
-            Long id,
-            String studentCode,
-            String major,
-            String className,
-            String phone) {
-
+    public StudentProfileResponse(Long id, String studentCode, String major, String className, String phone) {
         this.id = id;
         this.studentCode = studentCode;
         this.major = major;

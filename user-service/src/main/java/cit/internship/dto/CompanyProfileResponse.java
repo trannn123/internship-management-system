@@ -11,13 +11,7 @@ public class CompanyProfileResponse {
     public CompanyProfileResponse() {
     }
 
-    public CompanyProfileResponse(
-            Long id,
-            String companyName,
-            String taxCode,
-            String address,
-            String phone) {
-
+    public CompanyProfileResponse(Long id, String companyName, String taxCode, String address, String phone) {
         this.id = id;
         this.companyName = companyName;
         this.taxCode = taxCode;

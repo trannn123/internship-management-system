@@ -10,12 +10,7 @@ public class LecturerProfileResponse {
     public LecturerProfileResponse() {
     }
 
-    public LecturerProfileResponse(
-            Long id,
-            String lecturerCode,
-            String department,
-            String phone) {
-
+    public LecturerProfileResponse(Long id, String lecturerCode, String department, String phone) {
         this.id = id;
         this.lecturerCode = lecturerCode;
         this.department = department;

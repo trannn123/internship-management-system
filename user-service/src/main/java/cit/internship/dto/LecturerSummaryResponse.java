@@ -12,13 +12,7 @@ public class LecturerSummaryResponse {
     public LecturerSummaryResponse() {
     }
 
-    public LecturerSummaryResponse(
-            Long id,
-            Long userId,
-            String fullName,
-            String email,
-            String lecturerCode,
-            String department) {
+    public LecturerSummaryResponse(Long id, Long userId, String fullName, String email, String lecturerCode, String department) {
         this.id = id;
         this.userId = userId;
         this.fullName = fullName;
