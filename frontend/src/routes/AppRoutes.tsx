@@ -138,7 +138,15 @@ function AppRoutes() {
       />
       <Route
         path="/profile"
-        element={<RoleRoute allow="STUDENT" role={role}><ProfilePage /></RoleRoute>}
+        element={
+          role === "STUDENT" ||
+          role === "LECTURER" ||
+          role === "COMPANY" ? (
+            <ProfilePage />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
       />
 
       {/* Legacy old-workflow pages, kept for backward compatibility */}

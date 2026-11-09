@@ -44,12 +44,14 @@ const NAV_ITEMS: Record<AppRole, NavItem[]> = {
     { to: "/company/tasks", label: "Công việc", icon: "bi-list-task" },
     { to: "/company/logs", label: "Nhật ký thực tập sinh", icon: "bi-journal-text" },
     { to: "/company/evaluations", label: "Đánh giá", icon: "bi-clipboard-data" },
+    { to: "/profile", label: "Hồ sơ", icon: "bi-person-circle" },
   ],
   LECTURER: [
     { to: "/", label: "Tổng quan", icon: "bi-grid" },
     { to: "/lecturer/periods", label: "Kỳ được phân công", icon: "bi-calendar3" },
     { to: "/lecturer/registrations/pending", label: "Đăng ký chờ duyệt", icon: "bi-hourglass-split" },
     { to: "/lecturer/students", label: "Sinh viên phụ trách", icon: "bi-mortarboard" },
+    { to: "/profile", label: "Hồ sơ", icon: "bi-person-circle" },
   ],
   ADMIN: [
     { to: "/", label: "Tổng quan", icon: "bi-grid" },

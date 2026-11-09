@@ -17,6 +17,7 @@ import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
+import cit.internship.repository.InternshipOpportunityRepository;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
@@ -36,6 +37,9 @@ public class InternshipRegistrationService {
 
     @Inject
     InternshipPeriodLecturerRepository internshipPeriodLecturerRepository;
+
+    @Inject
+    InternshipOpportunityRepository internshipOpportunityRepository;
 
     @Inject
     InternshipService internshipService;
@@ -81,11 +85,28 @@ public class InternshipRegistrationService {
     @Transactional
     public InternshipRegistrationResponse createRegistration(InternshipRegistrationRequest request) {
         Long studentId = currentUserService.getUserId();
-        InternshipOpportunity opportunity = internshipOpportunityService.getOpportunityEntityById(request.getOpportunityId());
+        InternshipOpportunity opportunity =
+                internshipOpportunityRepository
+                        .findByIdForUpdate(request.getOpportunityId())
+                        .orElseThrow(() ->
+                                new NotFoundException("Opportunity not found")
+                        );
+
         InternshipPeriod period = internshipPeriodService.getPeriodEntityById(opportunity.getPeriodId());
 
         if (opportunity.getStatus() != OpportunityStatus.OPEN) {
             throw new BadRequestException("Registration is only allowed for OPEN opportunities");
+        }
+
+        if (opportunity.getQuantity() != null) {
+            long acceptedCount = internshipRegistrationRepository
+                    .countAcceptedByOpportunityId(opportunity.getId());
+
+            if (acceptedCount >= opportunity.getQuantity()) {
+                throw new BadRequestException(
+                        "Cơ hội thực tập này đã đủ số lượng sinh viên."
+                );
+            }
         }
 
         if (!internshipPeriodService.isRegistrationWindowOpen(period)) {
@@ -94,6 +115,27 @@ public class InternshipRegistrationService {
 
         if (internshipRegistrationRepository.findByStudentIdAndOpportunityId(studentId, opportunity.getId()) != null) {
             throw new BadRequestException("You have already registered for this opportunity");
+        }
+
+        List<InternshipRegistration> existingRegistrations =
+                internshipRegistrationRepository.findByStudentId(studentId);
+
+        boolean hasRegistrationInSamePeriod = existingRegistrations.stream()
+                .anyMatch(existing ->
+                        period.getId().equals(existing.getPeriodId())
+                                && existing.getStatus() != RegistrationStatus.REJECTED_COMPANY
+                                && existing.getStatus() != RegistrationStatus.REJECTED_LECTURER
+                );
+
+        if (hasRegistrationInSamePeriod) {
+            throw new WebApplicationException(
+                    Response.status(Response.Status.BAD_REQUEST)
+                            .type("application/json")
+                            .entity(
+                                    "{\"message\":\"Bạn đã có hồ sơ đăng ký hoặc đang thực tập trong kỳ này. Không thể đăng ký thêm vị trí khác.\"}"
+                            )
+                            .build()
+            );
         }
 
         InternshipRegistration registration = new InternshipRegistration();
@@ -153,6 +195,7 @@ public class InternshipRegistrationService {
     @Transactional
     public InternshipRegistrationResponse approveByLecturer(Long id) {
         InternshipRegistration registration = requireRegistration(id);
+
         Long lecturerId = currentUserService.getUserId();
 
         if (registration.getLecturerId() == null || !registration.getLecturerId().equals(lecturerId)) {
@@ -163,7 +206,49 @@ public class InternshipRegistrationService {
             throw new BadRequestException("Registration is not waiting for lecturer approval");
         }
 
-        InternshipOpportunity opportunity = internshipOpportunityService.getOpportunityEntityById(registration.getOpportunityId());
+        boolean hasAnotherApprovedRegistration =
+                internshipRegistrationRepository
+                        .findByStudentId(registration.getStudentId())
+                        .stream()
+                        .anyMatch(existing ->
+                                !existing.getId().equals(registration.getId())
+                                        && existing.getPeriodId().equals(registration.getPeriodId())
+                                        && (
+                                        existing.getStatus() == RegistrationStatus.IN_PROGRESS
+                                                || existing.getStatus() == RegistrationStatus.COMPLETED_COMPANY
+                                                || existing.getStatus() == RegistrationStatus.COMPLETED
+                                )
+                        );
+
+        if (hasAnotherApprovedRegistration) {
+            throw new WebApplicationException(
+                    Response.status(Response.Status.BAD_REQUEST)
+                            .type("application/json")
+                            .entity(
+                                    "{\"message\":\"Sinh viên đã có hồ sơ thực tập được duyệt trong kỳ này. Không thể duyệt thêm hồ sơ khác.\"}"
+                            )
+                            .build()
+            );
+        }
+
+        InternshipOpportunity opportunity =
+                internshipOpportunityRepository
+                        .findByIdForUpdate(registration.getOpportunityId())
+                        .orElseThrow(() ->
+                                new NotFoundException("Opportunity not found")
+                        );
+
+        if (opportunity.getQuantity() != null) {
+            long acceptedCount = internshipRegistrationRepository
+                    .countAcceptedByOpportunityId(opportunity.getId());
+
+            if (acceptedCount >= opportunity.getQuantity()) {
+                throw new BadRequestException(
+                        "Cơ hội thực tập này đã đủ số lượng sinh viên. Không thể duyệt thêm."
+                );
+            }
+        }
+
         InternshipPeriod period = internshipPeriodService.getPeriodEntityById(registration.getPeriodId());
 
         registration.setStatus(RegistrationStatus.IN_PROGRESS);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   approveInternshipRegistrationByCompany,
   getInternshipRegistrations,
@@ -81,6 +81,7 @@ function RegistrationsPage() {
     action: RegistrationAction;
   } | null>(null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const actionInProgress = useRef(false);
 
   useEffect(() => {
     void loadRegistrations();
@@ -173,10 +174,11 @@ function RegistrationsPage() {
   );
 
   async function handleConfirmAction() {
-    if (!modalState) {
+    if (!modalState || actionInProgress.current) {
       return;
     }
 
+    actionInProgress.current = true;
     setBusyId(modalState.registration.id);
     setError("");
 
@@ -210,6 +212,7 @@ function RegistrationsPage() {
         ),
       );
     } finally {
+      actionInProgress.current = false;
       setBusyId(null);
     }
   }

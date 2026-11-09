@@ -59,6 +59,7 @@ export interface InternshipOpportunity {
   requirements: string | null;
   location: string | null;
   quantity: number | null;
+  acceptedCount: number;
   status: OpportunityStatus | null;
   createdAt: string | null;
   updatedAt: string | null;

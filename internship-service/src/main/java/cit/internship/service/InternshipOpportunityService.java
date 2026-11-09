@@ -13,7 +13,7 @@ import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import jakarta.ws.rs.ForbiddenException;
 import jakarta.ws.rs.NotFoundException;
-
+import cit.internship.repository.InternshipRegistrationRepository;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -23,6 +23,9 @@ public class InternshipOpportunityService {
 
     @Inject
     InternshipOpportunityRepository internshipOpportunityRepository;
+
+    @Inject
+    InternshipRegistrationRepository internshipRegistrationRepository;
 
     @Inject
     InternshipPeriodService internshipPeriodService;
@@ -92,16 +95,30 @@ public class InternshipOpportunityService {
     }
 
     @Transactional
-    public InternshipOpportunityResponse updateOpportunity(Long id, InternshipOpportunityRequest request) {
+    public InternshipOpportunityResponse updateOpportunity(
+            Long id,
+            InternshipOpportunityRequest request
+    ) {
         InternshipOpportunity opportunity = requireOpportunity(id);
         Long companyId = currentUserService.getUserId();
 
         if (!opportunity.getCompanyId().equals(companyId)) {
-            throw new ForbiddenException("You do not have permission to update this opportunity");
+            throw new ForbiddenException(
+                    "You do not have permission to update this opportunity"
+            );
         }
 
+        // Lưu lại chỉ tiêu ban đầu
+        Integer originalQuantity = opportunity.getQuantity();
+
         internshipPeriodService.requireOpenPeriodForOpportunity(request.getPeriodId());
+
+        // Cập nhật các thông tin khác
         apply(opportunity, request);
+
+        // Giữ nguyên chỉ tiêu, không cho phép chỉnh sửa
+        opportunity.setQuantity(originalQuantity);
+
         opportunity.setCompanyId(companyId);
 
         return toResponse(opportunity);
@@ -133,6 +150,7 @@ public class InternshipOpportunityService {
 
     private InternshipOpportunityResponse toResponse(InternshipOpportunity opportunity) {
         InternshipOpportunityResponse response = new InternshipOpportunityResponse();
+
         response.setId(opportunity.getId());
         response.setPeriodId(opportunity.getPeriodId());
         response.setCompanyId(opportunity.getCompanyId());
@@ -141,9 +159,17 @@ public class InternshipOpportunityService {
         response.setRequirements(opportunity.getRequirements());
         response.setLocation(opportunity.getLocation());
         response.setQuantity(opportunity.getQuantity());
+
+        // Đếm số sinh viên đã được tuyển vào cơ hội này
+        long acceptedCount = internshipRegistrationRepository
+                .countAcceptedByOpportunityId(opportunity.getId());
+
+        response.setAcceptedCount(acceptedCount);
+
         response.setStatus(opportunity.getStatus());
         response.setCreatedAt(opportunity.getCreatedAt());
         response.setUpdatedAt(opportunity.getUpdatedAt());
+
         return response;
     }
 }

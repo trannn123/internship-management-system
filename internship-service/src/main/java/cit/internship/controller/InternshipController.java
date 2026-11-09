@@ -12,7 +12,10 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import io.quarkus.security.Authenticated;
 import cit.internship.service.InternshipRegistrationService;
-
+import cit.internship.entity.InternshipRegistration;
+import cit.internship.entity.InternshipPeriod;
+import cit.internship.repository.InternshipRegistrationRepository;
+import cit.internship.repository.InternshipPeriodRepository;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +24,12 @@ import java.util.Map;
 @Consumes(MediaType.APPLICATION_JSON)
 @Authenticated
 public class InternshipController {
+
+    @Inject
+    InternshipRegistrationRepository internshipRegistrationRepository;
+
+    @Inject
+    InternshipPeriodRepository internshipPeriodRepository;
 
     @Inject
     InternshipService internshipService;
@@ -85,6 +94,62 @@ public class InternshipController {
         }
 
         return Response.ok(internship).build();
+    }
+
+    @GET
+    @Path("/{id}/period-end-date")
+    public Response getInternshipPeriodEndDate(@PathParam("id") Long id) {
+
+        Internship internship = internshipService.getInternshipById(id);
+
+        if (internship == null) {
+            return Response.status(Response.Status.NOT_FOUND).build();
+        }
+
+        Long userId = currentUserService.getUserId();
+        String role = currentUserService.getRole();
+
+        if (!internshipService.canViewInternship(internship, role, userId)) {
+            return Response.status(Response.Status.FORBIDDEN).build();
+        }
+
+        if (internship.getRegistrationId() == null) {
+            return Response.status(Response.Status.BAD_REQUEST)
+                    .entity(Map.of(
+                            "message", "Internship has no registration"
+                    ))
+                    .build();
+        }
+
+        InternshipRegistration registration =
+                internshipRegistrationRepository.findById(
+                        internship.getRegistrationId()
+                );
+
+        if (registration == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of(
+                            "message", "Internship registration not found"
+                    ))
+                    .build();
+        }
+
+        InternshipPeriod period =
+                internshipPeriodRepository.findById(
+                        registration.getPeriodId()
+                );
+
+        if (period == null) {
+            return Response.status(Response.Status.NOT_FOUND)
+                    .entity(Map.of(
+                            "message", "Internship period not found"
+                    ))
+                    .build();
+        }
+
+        return Response.ok(
+                Map.of("internshipEndDate", period.getInternshipEndDate())
+        ).build();
     }
 
     @POST

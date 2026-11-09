@@ -33,6 +33,13 @@ export async function apiFetch<T>(
   path: string,
   options: RequestInit = {},
 ): Promise<T> {
+
+  if (!keycloak.authenticated) {
+    throw new Error("User is not authenticated");
+  }
+
+  await keycloak.updateToken(30);
+
   if (!keycloak.token) {
     throw new Error("User is not authenticated");
   }

@@ -261,10 +261,12 @@ function InternshipWorkspacePage() {
     }
   }
 
+  const canCreateLog = internship?.status === "IN_PROGRESS";
+
   async function handleLogSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!internship || logSubmitting || !validateLogForm()) {
+    if (!internship || internship.status !== "IN_PROGRESS" || logSubmitting || !validateLogForm()) {
       return;
     }
 
@@ -588,6 +590,7 @@ function InternshipWorkspacePage() {
                       </div>
                     ) : null}
 
+                    {canCreateLog ? (
                     <form onSubmit={handleLogSubmit} noValidate>
                       <div className="mb-3">
                         <label className="form-label" htmlFor="logDate">
@@ -698,6 +701,13 @@ function InternshipWorkspacePage() {
                         )}
                       </button>
                     </form>
+                    ) : (
+                      <div className="alert alert-info rounded-3">
+                        <i className="bi bi-info-circle me-2" />
+                        Chỉ có thể tạo nhật ký khi thực tập đang diễn ra.
+                        Bạn vẫn có thể xem các nhật ký đã tạo trước đó.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -742,34 +752,38 @@ function InternshipWorkspacePage() {
               <div className="card border-0 shadow-sm rounded-3">
                 <div className="card-body p-4">
                   <div className="row g-4">
-                    <div className="col-md-4">
+                    <div className="col-md-6">
                       <div className="p-4 rounded-3 bg-success-subtle h-100">
-                        <p className="small text-secondary text-uppercase fw-semibold mb-1">
-                          Company Evaluation
+                        <p className="small text-secondary text-uppercase fw-semibold mb-2">
+                          Nhận xét từ doanh nghiệp
                         </p>
-                        <h2 className="h3 mb-2">{evaluationSummary.companyScore ?? "—"}</h2>
-                        <p className="mb-0 text-secondary">
-                          {evaluationSummary.companyComment ?? "Chưa có nhận xét từ doanh nghiệp."}
+                        <p className="mb-0">
+                          {evaluationSummary.companyComment ??
+                            "Chưa có nhận xét từ doanh nghiệp."}
                         </p>
                       </div>
                     </div>
-                    <div className="col-md-4">
+
+                    <div className="col-md-6">
                       <div className="p-4 rounded-3 bg-info-subtle h-100">
-                        <p className="small text-secondary text-uppercase fw-semibold mb-1">
-                          Lecturer Evaluation
+                        <p className="small text-secondary text-uppercase fw-semibold mb-2">
+                          Nhận xét từ giảng viên
                         </p>
-                        <h2 className="h3 mb-2">{evaluationSummary.lecturerScore ?? "—"}</h2>
-                        <p className="mb-0 text-secondary">
-                          {evaluationSummary.lecturerComment ?? "Chưa có nhận xét từ giảng viên."}
+                        <p className="mb-0">
+                          {evaluationSummary.lecturerComment ??
+                            "Chưa có nhận xét từ giảng viên."}
                         </p>
                       </div>
                     </div>
-                    <div className="col-md-4">
-                      <div className="p-4 rounded-3 bg-primary-subtle h-100">
-                        <p className="small text-secondary text-uppercase fw-semibold mb-1">
-                          Final Score
+
+                    <div className="col-12">
+                      <div className="p-4 rounded-3 bg-primary-subtle text-center">
+                        <p className="small text-secondary text-uppercase fw-semibold mb-2">
+                          Điểm tổng kết thực tập
                         </p>
-                        <h2 className="h3 mb-2">{evaluationSummary.finalScore ?? "—"}</h2>
+                        <h2 className="display-5 fw-bold mb-2">
+                          {evaluationSummary.finalScore ?? "—"}
+                        </h2>
                         <p className="mb-0 text-secondary">
                           Điểm tổng hợp cuối kỳ thực tập.
                         </p>

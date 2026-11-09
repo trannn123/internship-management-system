@@ -130,15 +130,20 @@ function AssignedStudentsPage() {
       key: "action",
       header: "",
       className: "text-end",
-      render: (row) => (
-        <Link
-          to={`/lecturer/students/${row.internship?.id ?? row.registration.id}`}
-          className="btn btn-sm btn-outline-primary"
-        >
-          <i className="bi bi-graph-up-arrow me-1" />
-          Xem tiến độ
-        </Link>
-      ),
+      render: (row) =>
+        row.internship ? (
+          <Link
+            to={`/lecturer/students/${row.internship.id}`}
+            className="btn btn-sm btn-outline-primary"
+          >
+            <i className="bi bi-graph-up-arrow me-1" />
+            Xem tiến độ
+          </Link>
+        ) : (
+          <span className="text-secondary small">
+            Chưa có dữ liệu thực tập
+          </span>
+        ),
     },
   ];
 

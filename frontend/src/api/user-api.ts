@@ -26,12 +26,6 @@ export function getAllLecturers() {
   return apiFetch<LecturerSummary[]>(USER_SERVICE_URL, "/api/users/lecturers");
 }
 
-/**
- * Resolve a Lecturer/Student/Company *profile* id (not the User id) to its
- * display info. `studentId`/`companyId`/`lecturerId` fields on registrations,
- * internships, etc. are always profile ids, so use these instead of
- * `getUserById` to avoid resolving the wrong person.
- */
 export function getLecturerProfileById(id: number) {
   return apiFetch<LecturerSummary>(
     USER_SERVICE_URL,

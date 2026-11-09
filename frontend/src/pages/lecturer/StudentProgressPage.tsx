@@ -80,23 +80,21 @@ function StudentProgressPage() {
 
       try {
         const internships = await getMyInternships();
-        let internship = internships.find((item) => item.id === resourceId) ?? null;
-        let registration: InternshipRegistration | null = null;
 
-        if (internship?.registrationId != null) {
-          registration = await getInternshipRegistrationById(internship.registrationId);
-        }
+        const internship = internships.find(
+          (item) => item.id === resourceId
+        );
 
         if (!internship) {
-          registration = await getInternshipRegistrationById(resourceId);
-          internship =
-            internships.find((item) => item.registrationId === registration?.id) ??
-            (await getInternshipById(resourceId));
+          throw new Error(
+            "Không tìm thấy quá trình thực tập hoặc bạn không có quyền truy cập."
+          );
         }
 
-        if (!registration && internship.registrationId != null) {
-          registration = await getInternshipRegistrationById(internship.registrationId);
-        }
+        const registration: InternshipRegistration | null =
+          internship.registrationId != null
+            ? await getInternshipRegistrationById(internship.registrationId)
+            : null;
 
         const [
           period,
@@ -171,11 +169,12 @@ function StudentProgressPage() {
   ) {
     event.preventDefault();
 
-    if (!progress || progress.evaluation) {
+    if (!progress || progress.evaluation || submitting) {
       return;
     }
 
     const parsedScore = Number(score);
+
     if (!Number.isFinite(parsedScore) || parsedScore < 0 || parsedScore > 10) {
       setError("Điểm đánh giá phải nằm trong khoảng từ 0 đến 10.");
       return;
@@ -185,51 +184,126 @@ function StudentProgressPage() {
     setError("");
     setFeedback("");
 
+    let evaluation;
+
     try {
-      const evaluation = await createLecturerEvaluation(progress.internship.id, {
+      evaluation = await createLecturerEvaluation(progress.internship.id, {
         score: parsedScore,
         comment: comment.trim() || null,
       });
-
-      // Once both the company and lecturer evaluations exist, finalize the
-      // registration so its status (and the internship status) move to
-      // COMPLETED in one consistent transition visible to every role.
-      let updatedInternship = progress.internship;
-      const existence = await getEvaluationExistence(progress.internship.id);
-      if (
-        existence.companyEvaluationExists &&
-        existence.lecturerEvaluationExists &&
-        progress.internship.registrationId
-      ) {
-        try {
-          await completeInternshipRegistration(
-            progress.internship.registrationId,
-          );
-          updatedInternship = {
-            ...progress.internship,
-            status: "COMPLETED_LECTURER",
-          };
-        } catch (completeError) {
-          console.error(
-            "Failed to finalize internship registration:",
-            completeError,
-          );
-        }
-      }
-
-      setProgress((currentProgress) =>
-        currentProgress
-          ? {
-              ...currentProgress,
-              internship: updatedInternship,
-              evaluation,
-            }
-          : currentProgress,
-      );
-      setFeedback("Đã lưu đánh giá giảng viên thành công.");
     } catch (submitError) {
       console.error("Failed to create lecturer evaluation:", submitError);
       setError(getErrorMessage(submitError, "Không thể lưu đánh giá."));
+      setSubmitting(false);
+      return;
+    }
+
+    setProgress((current) =>
+      current ? { ...current, evaluation } : current,
+    );
+
+    try {
+      const existence = await getEvaluationExistence(progress.internship.id);
+
+      if (
+        !existence.companyEvaluationExists ||
+        !existence.lecturerEvaluationExists
+      ) {
+        setFeedback(
+          "Đã lưu đánh giá giảng viên. Thực tập chưa đủ điều kiện hoàn thành.",
+        );
+        return;
+      }
+
+      if (
+        progress.registration?.status !== "COMPLETED_COMPANY" ||
+        progress.internship.registrationId == null
+      ) {
+        setFeedback("Đã lưu đánh giá giảng viên.");
+        setError(
+          "Thực tập chưa được doanh nghiệp xác nhận hoàn thành.",
+        );
+        return;
+      }
+
+      const updatedRegistration = await completeInternshipRegistration(
+        progress.internship.registrationId,
+      );
+
+      setProgress((current) =>
+        current
+          ? {
+              ...current,
+              registration: updatedRegistration,
+              internship: {
+                ...current.internship,
+                status: "COMPLETED_LECTURER",
+              },
+            }
+          : current,
+      );
+
+      setFeedback("Đã lưu đánh giá và hoàn thành thực tập thành công.");
+    } catch (completeError) {
+      console.error("Failed to finalize internship:", completeError);
+
+      setFeedback("Đã lưu đánh giá giảng viên thành công.");
+      setError(
+        "Chưa thể hoàn thành thực tập: " +
+          getErrorMessage(completeError, "Vui lòng kiểm tra lại trạng thái."),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleCompleteInternship() {
+    if (
+      !progress ||
+      !progress.evaluation ||
+      progress.registration?.status !== "COMPLETED_COMPANY" ||
+      submitting
+    ) {
+      return;
+    }
+
+    const registrationId = progress.internship.registrationId;
+
+    if (registrationId == null) {
+      setError("Không tìm thấy mã đăng ký thực tập.");
+      return;
+    }
+
+    setSubmitting(true);
+    setError("");
+    setFeedback("");
+
+    try {
+      const updatedRegistration =
+        await completeInternshipRegistration(registrationId);
+
+      setProgress((current) =>
+        current
+          ? {
+              ...current,
+              registration: updatedRegistration,
+              internship: {
+                ...current.internship,
+                status: "COMPLETED_LECTURER",
+              },
+            }
+          : current,
+      );
+
+      setFeedback("Đã hoàn thành thực tập thành công.");
+    } catch (completeError) {
+      console.error("Failed to complete internship:", completeError);
+      setError(
+        getErrorMessage(
+          completeError,
+          "Không thể hoàn thành thực tập. Vui lòng thử lại.",
+        ),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -498,6 +572,7 @@ function StudentProgressPage() {
           </div>
 
           {progress.evaluation ? (
+            <>
             <div className="bg-success-subtle rounded-3 p-4">
               <div className="d-flex flex-column flex-lg-row justify-content-between gap-3">
                 <div>
@@ -517,6 +592,33 @@ function StudentProgressPage() {
                 <i className="bi bi-clipboard-check fs-1 text-success" />
               </div>
             </div>
+
+            {progress.registration?.status === "COMPLETED_COMPANY" && (
+              <div className="mt-3">
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  disabled={submitting}
+                  onClick={() => void handleCompleteInternship()}
+                >
+                  {submitting ? (
+                    <>
+                      <span
+                        className="spinner-border spinner-border-sm me-2"
+                        aria-hidden="true"
+                      />
+                      Đang hoàn thành...
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-check-circle me-2" />
+                      Hoàn thành thực tập
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+            </>
           ) : (
             <form onSubmit={handleSubmitEvaluation} className="row g-3">
               <div className="col-12 col-md-4">

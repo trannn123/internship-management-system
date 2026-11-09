@@ -11,6 +11,8 @@ import cit.evaluation.client.internship.InternshipServiceClient;
 import org.eclipse.microprofile.rest.client.inject.RestClient;
 import cit.evaluation.repository.LecturerEvaluationRepository;
 import java.time.LocalDateTime;
+import cit.evaluation.client.internship.InternshipPeriodEndDateResponse;
+import java.time.LocalDate;
 
 @ApplicationScoped
 public class CompanyEvaluationService {
@@ -51,6 +53,22 @@ public class CompanyEvaluationService {
         if (!"IN_PROGRESS".equals(internship.getStatus())) {
             throw new jakarta.ws.rs.BadRequestException(
                     "Company evaluation is only allowed when internship is IN_PROGRESS");
+        }
+
+        InternshipPeriodEndDateResponse periodResponse =
+                internshipServiceClient.getInternshipPeriodEndDate(internshipId);
+
+        if (periodResponse == null
+                || periodResponse.getInternshipEndDate() == null) {
+            throw new jakarta.ws.rs.BadRequestException(
+                    "Internship period end date is not available");
+        }
+
+        LocalDate internshipEndDate = periodResponse.getInternshipEndDate();
+
+        if (!LocalDate.now().isAfter(internshipEndDate)) {
+            throw new jakarta.ws.rs.BadRequestException(
+                    "Company evaluation is only allowed after the internship period ends");
         }
 
         CompanyEvaluation existingEvaluation =

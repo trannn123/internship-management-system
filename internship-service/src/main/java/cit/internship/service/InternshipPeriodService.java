@@ -122,7 +122,18 @@ public class InternshipPeriodService {
         InternshipPeriod period = requirePeriod(periodId);
 
         if (period.getStatus() != InternshipPeriodStatus.OPEN) {
-            throw new BadRequestException("Only OPEN internship periods can accept opportunities");
+            throw new BadRequestException(
+                    "Only OPEN internship periods can accept opportunities"
+            );
+        }
+
+        LocalDate today = LocalDate.now();
+
+        if (today.isBefore(period.getRegistrationStartDate())
+                || today.isAfter(period.getRegistrationEndDate())) {
+            throw new BadRequestException(
+                    "Kỳ thực tập chưa đến hạn hoặc đã hết hạn đăng ký."
+            );
         }
 
         return period;

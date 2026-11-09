@@ -20,4 +20,10 @@ public interface InternshipServiceClient {
     InternshipResponse getInternshipById(
             @PathParam("id") Long id
     );
+
+    @GET
+    @Path("/{id}/period-end-date")
+    InternshipPeriodEndDateResponse getInternshipPeriodEndDate(
+            @PathParam("id") Long id
+    );
 }

@@ -1,6 +1,7 @@
 package cit.internship.repository;
 
 import cit.internship.entity.InternshipRegistration;
+import cit.internship.entity.RegistrationStatus;
 import io.quarkus.hibernate.orm.panache.PanacheRepository;
 import jakarta.enterprise.context.ApplicationScoped;
 
@@ -27,5 +28,17 @@ public class InternshipRegistrationRepository implements PanacheRepository<Inter
 
     public long countByPeriodIdAndLecturerId(Long periodId, Long lecturerId) {
         return count("periodId = ?1 and lecturerId = ?2", periodId, lecturerId);
+    }
+
+    public long countAcceptedByOpportunityId(Long opportunityId) {
+        return count(
+                "opportunityId = ?1 and status in ?2",
+                opportunityId,
+                List.of(
+                        RegistrationStatus.IN_PROGRESS,
+                        RegistrationStatus.COMPLETED_COMPANY,
+                        RegistrationStatus.COMPLETED
+                )
+        );
     }
 }

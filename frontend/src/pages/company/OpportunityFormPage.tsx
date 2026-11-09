@@ -114,13 +114,22 @@ function OpportunityFormPage() {
   }, [isEditMode, opportunityId]);
 
   const selectablePeriods = useMemo(() => {
-    const currentId = Number(periodId || 0);
+    const today = new Date().toLocaleDateString("en-CA");
 
-    return periods.filter(
-      (period) =>
-        period.status === "OPEN" || period.id === currentId,
-    );
-  }, [periodId, periods]);
+    return periods.filter((period) => {
+      const isWithinRegistrationDates =
+        period.registrationStartDate <= today &&
+        period.registrationEndDate >= today;
+
+      const isAvailable =
+        period.status === "OPEN" &&
+        isWithinRegistrationDates;
+
+      // Khi chỉnh sửa, vẫn hiển thị kỳ đã chọn trước đó
+      return isAvailable ||
+        (isEditMode && period.id === Number(periodId));
+    });
+  }, [periodId, periods, isEditMode]);
 
   const usePeriodSelect = selectablePeriods.length > 0;
 
@@ -416,6 +425,7 @@ function OpportunityFormPage() {
                 >
                   Số lượng tuyển
                 </label>
+
                 <input
                   id="quantity"
                   type="number"
@@ -427,15 +437,22 @@ function OpportunityFormPage() {
                   onChange={(event) =>
                     setQuantity(event.target.value)
                   }
-                  disabled={saving}
+                  disabled={isEditMode || saving}
                 />
+
+                {isEditMode && (
+                  <div className="form-text text-muted">
+                    Số lượng tuyển không thể thay đổi sau khi tạo cơ hội thực tập.
+                  </div>
+                )}
+
                 {errors.quantity ? (
                   <div className="invalid-feedback d-block">
                     {errors.quantity}
                   </div>
                 ) : null}
               </div>
-            </div>
+              </div>
 
             <div className="d-flex flex-wrap justify-content-end gap-2 mt-4">
               <Link

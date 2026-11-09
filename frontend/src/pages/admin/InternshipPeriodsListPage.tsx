@@ -158,24 +158,24 @@ function InternshipPeriodsListPage() {
         const toggleVariant = canClose ? "btn-outline-secondary" : "btn-outline-success";
 
         return (
-          <div className="d-inline-flex flex-wrap justify-content-end gap-2">
+          <div className="d-inline-flex flex-nowrap justify-content-end align-items-center gap-2">
             <Link
               to={`/admin/periods/${period.id}`}
-              className="btn btn-sm btn-outline-primary"
+              className="btn btn-sm btn-outline-primary text-nowrap"
             >
               <i className="bi bi-eye me-1" />
               Xem
             </Link>
             <Link
               to={`/admin/periods/${period.id}/edit`}
-              className="btn btn-sm btn-outline-secondary"
+              className="btn btn-sm btn-outline-secondary text-nowrap"
             >
               <i className="bi bi-pencil-square me-1" />
               Sửa
             </Link>
             <button
               type="button"
-              className={`btn btn-sm ${toggleVariant}`}
+              className={`btn btn-sm ${toggleVariant} text-nowrap`}
               disabled={isBusy || !canToggle}
               onClick={() => setToggleTarget(period)}
             >
@@ -184,7 +184,7 @@ function InternshipPeriodsListPage() {
             </button>
             <Link
               to={`/admin/periods/${period.id}`}
-              className="btn btn-sm btn-outline-info"
+              className="btn btn-sm btn-outline-info text-nowrap"
             >
               <i className="bi bi-person-workspace me-1" />
               Phân công giảng viên

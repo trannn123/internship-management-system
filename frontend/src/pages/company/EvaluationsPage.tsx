@@ -136,12 +136,18 @@ function EvaluationsPage() {
   ) {
     event.preventDefault();
 
-    if (!selectedRow) {
+    if (!selectedRow || submitting || selectedRow.hasEvaluation) {
+      return;
+    }
+
+    if (draft.score.trim() === "") {
+      setError("Vui lòng nhập điểm đánh giá.");
       return;
     }
 
     const score = Number(draft.score);
-    if (Number.isNaN(score) || score < 0 || score > 10) {
+
+    if (!Number.isFinite(score) || score < 0 || score > 10) {
       setError("Điểm đánh giá phải nằm trong khoảng 0 đến 10.");
       return;
     }
@@ -149,61 +155,121 @@ function EvaluationsPage() {
     setSubmitting(true);
     setError("");
 
+    const internshipId = selectedRow.internship.id;
+
     const payload: CompanyEvaluationRequest = {
       score,
       comment: draft.comment.trim() || null,
     };
 
+    let evaluation: CompanyEvaluation;
+
     try {
-      const evaluation = await createCompanyEvaluation(
-        selectedRow.internship.id,
+      evaluation = await createCompanyEvaluation(
+        internshipId,
         payload,
       );
-
-      // Submitting the company evaluation immediately advances the
-      // registration/internship status to COMPLETED_COMPANY so every role
-      // (company, lecturer, student) sees the update right away.
-      let updatedInternship = selectedRow.internship;
-      if (selectedRow.internship.status === "IN_PROGRESS") {
-        try {
-          await completeInternshipByCompanyEvaluation(
-            selectedRow.internship.id,
-          );
-          updatedInternship = {
-            ...selectedRow.internship,
-            status: "COMPLETED_COMPANY",
-          };
-        } catch (completeError) {
-          console.error(
-            "Failed to mark internship as completed by company:",
-            completeError,
-          );
-        }
-      }
-
-      setRows((current) =>
-        current.map((row) =>
-          row.internship.id === selectedRow.internship.id
-            ? {
-                ...row,
-                internship: updatedInternship,
-                evaluation,
-                hasEvaluation: true,
-              }
-            : row,
-        ),
-      );
-      setSelectedInternshipId(null);
-      setDraft(DEFAULT_DRAFT);
     } catch (submitError) {
       console.error(
         "Failed to create company evaluation:",
         submitError,
       );
+
       setError(
         toErrorMessage(
           submitError,
           "Không thể tạo đánh giá doanh nghiệp.",
+        ),
+      );
+
+      setSubmitting(false);
+      return;
+    }
+
+    // Đánh giá đã được lưu thành công.
+    // Cập nhật giao diện trước khi chuyển trạng thái thực tập.
+    setRows((current) =>
+      current.map((row) =>
+        row.internship.id === internshipId
+          ? {
+              ...row,
+              evaluation,
+              hasEvaluation: true,
+            }
+          : row,
+      ),
+    );
+
+    setSelectedInternshipId(null);
+    setDraft(DEFAULT_DRAFT);
+
+    try {
+      if (selectedRow.internship.status === "IN_PROGRESS") {
+        await completeInternshipByCompanyEvaluation(internshipId);
+
+        setRows((current) =>
+          current.map((row) =>
+            row.internship.id === internshipId
+              ? {
+                  ...row,
+                  internship: {
+                    ...row.internship,
+                    status: "COMPLETED_COMPANY",
+                  },
+                }
+              : row,
+          ),
+        );
+      }
+    } catch (completeError) {
+      console.error(
+        "Failed to complete internship by company:",
+        completeError,
+      );
+
+      setError(
+        "Đánh giá đã được lưu thành công, nhưng chưa thể xác nhận hoàn thành thực tập. " +
+          toErrorMessage(
+            completeError,
+            "Bạn có thể nhấn 'Xác nhận hoàn thành' để thử lại.",
+          ),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleCompleteByCompany(internshipId: number) {
+    if (submitting) return;
+
+    setSubmitting(true);
+    setError("");
+
+    try {
+      await completeInternshipByCompanyEvaluation(internshipId);
+
+      setRows((current) =>
+        current.map((row) =>
+          row.internship.id === internshipId
+            ? {
+                ...row,
+                internship: {
+                  ...row.internship,
+                  status: "COMPLETED_COMPANY",
+                },
+              }
+            : row,
+        ),
+      );
+    } catch (completeError) {
+      console.error(
+        "Failed to complete internship by company:",
+        completeError,
+      );
+      setError(
+        toErrorMessage(
+          completeError,
+          "Không thể xác nhận hoàn thành thực tập.",
         ),
       );
     } finally {
@@ -270,32 +336,55 @@ function EvaluationsPage() {
         key: "actions",
         header: "Thao tác",
         className: "text-end text-nowrap",
-        render: (row) =>
-          row.hasEvaluation ? (
-            <button
-              type="button"
-              className="btn btn-sm btn-outline-secondary rounded-pill"
-              disabled
-            >
-              <i className="bi bi-check2-circle me-1" />
-              Đã đánh giá
-            </button>
-          ) : (
+        render: (row) => {
+          if (
+            row.hasEvaluation &&
+            row.internship.status === "IN_PROGRESS"
+          ) {
+            return (
+              <button
+                type="button"
+                className="btn btn-sm btn-success rounded-pill"
+                disabled={submitting}
+                onClick={() => void handleCompleteByCompany(row.internship.id)}
+              >
+                <i className="bi bi-check-circle me-1" />
+                Xác nhận hoàn thành
+              </button>
+            );
+          }
+
+          if (row.hasEvaluation) {
+            return (
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-secondary rounded-pill"
+                disabled
+              >
+                <i className="bi bi-check2-circle me-1" />
+                Đã đánh giá
+              </button>
+            );
+          }
+
+          return (
             <button
               type="button"
               className="btn btn-sm btn-primary rounded-pill"
+              disabled={submitting}
               onClick={() => {
                 setSelectedInternshipId(row.internship.id);
                 setDraft(DEFAULT_DRAFT);
               }}
             >
               <i className="bi bi-clipboard-check me-1" />
-              Evaluate
+              Đánh giá
             </button>
-          ),
+          );
+        },
       },
     ],
-    [],
+    [submitting],
   );
 
   if (loading) {

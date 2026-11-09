@@ -14,6 +14,7 @@ public class InternshipOpportunityResponse {
     private String requirements;
     private String location;
     private Integer quantity;
+    private Long acceptedCount;
     private OpportunityStatus status;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -84,6 +85,10 @@ public class InternshipOpportunityResponse {
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
+
+    public Long getAcceptedCount() { return acceptedCount; }
+
+    public void setAcceptedCount(Long acceptedCount) { this.acceptedCount = acceptedCount; }
 
     public OpportunityStatus getStatus() {
         return status;

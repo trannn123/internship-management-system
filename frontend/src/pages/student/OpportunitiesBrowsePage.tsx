@@ -29,6 +29,29 @@ function formatDate(value: string | null | undefined) {
   }).format(new Date(value));
 }
 
+
+function isRegistrationWindowOpen(period: InternshipPeriod): boolean {
+  if (
+    period.status !== "OPEN" ||
+    !period.registrationStartDate ||
+    !period.registrationEndDate
+  ) {
+    return false;
+  }
+
+  const today = new Date();
+  const todayString = [
+    today.getFullYear(),
+    String(today.getMonth() + 1).padStart(2, "0"),
+    String(today.getDate()).padStart(2, "0"),
+  ].join("-");
+
+  return (
+    todayString >= period.registrationStartDate &&
+    todayString <= period.registrationEndDate
+  );
+}
+
 function OpportunitiesBrowsePage() {
   const [opportunities, setOpportunities] = useState<InternshipOpportunity[]>([]);
   const [periods, setPeriods] = useState<InternshipPeriod[]>([]);
@@ -99,8 +122,9 @@ function OpportunitiesBrowsePage() {
         const period = periodMap.get(opportunity.periodId);
 
         return (
-          opportunity.status === OpportunityStatus.OPEN
-          && period?.status === "OPEN"
+          opportunity.status === OpportunityStatus.OPEN &&
+          period != null &&
+          isRegistrationWindowOpen(period)
         );
       }),
     [opportunities, periodMap],
@@ -182,6 +206,21 @@ function OpportunitiesBrowsePage() {
             const period = periodMap.get(opportunity.periodId);
             const myRegistration = registrationByOpportunityId.get(opportunity.id);
             const alreadyApplied = myRegistration !== undefined;
+
+            const hasRegistrationInSamePeriod = registrations.some(
+              (registration) =>
+                registration.periodId === opportunity.periodId &&
+                registration.status !== "REJECTED_COMPANY" &&
+                registration.status !== "REJECTED_LECTURER"
+            );
+
+            const isFull =
+              opportunity.quantity != null &&
+              opportunity.acceptedCount >= opportunity.quantity;
+
+            const cannotRegister =
+              alreadyApplied || hasRegistrationInSamePeriod || isFull;
+
             const isSubmitting = submittingId === opportunity.id;
 
             return (
@@ -227,7 +266,11 @@ function OpportunitiesBrowsePage() {
                           <p className="small text-secondary text-uppercase fw-semibold mb-1">
                             Số lượng
                           </p>
-                          <p className="mb-0">{opportunity.quantity ?? "Không giới hạn"}</p>
+                          <p className="mb-0">
+                            {opportunity.quantity != null
+                              ? `${opportunity.acceptedCount}/${opportunity.quantity} sinh viên`
+                              : "Không giới hạn"}
+                          </p>
                         </div>
                       </div>
                     </div>
@@ -279,7 +322,7 @@ function OpportunitiesBrowsePage() {
                             ? "btn-outline-secondary"
                             : "btn-primary"
                         }`}
-                        disabled={alreadyApplied || isSubmitting}
+                        disabled={cannotRegister || isSubmitting}
                         onClick={() => setSelectedOpportunity(opportunity)}
                       >
                         {isSubmitting ? (
@@ -292,6 +335,10 @@ function OpportunitiesBrowsePage() {
                           </>
                         ) : myRegistration ? (
                           myRegistration.status.replaceAll("_", " ")
+                        ) : hasRegistrationInSamePeriod ? (
+                          "Đã đăng ký trong kỳ này"
+                        ) : isFull ? (
+                          "Đã đủ số lượng"
                         ) : (
                           <>
                             <i className="bi bi-send-check me-2" />
