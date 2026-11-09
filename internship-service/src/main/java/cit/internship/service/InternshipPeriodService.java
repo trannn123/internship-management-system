@@ -27,10 +27,7 @@ public class InternshipPeriodService {
     InternshipPeriodLecturerRepository internshipPeriodLecturerRepository;
 
     public List<InternshipPeriodResponse> getAllPeriods() {
-        return internshipPeriodRepository.listAll()
-                .stream()
-                .map(this::toResponse)
-                .toList();
+        return internshipPeriodRepository.listAll().stream().map(this::toResponse).toList();
     }
 
     public InternshipPeriodResponse getPeriodById(Long id) {
@@ -160,15 +157,11 @@ public class InternshipPeriodService {
     }
 
     private void validatePeriodDates(InternshipPeriodRequest request) {
-        if (request.getRegistrationStartDate() != null
-                && request.getRegistrationEndDate() != null
-                && request.getRegistrationStartDate().isAfter(request.getRegistrationEndDate())) {
+        if (request.getRegistrationStartDate() != null && request.getRegistrationEndDate() != null && request.getRegistrationStartDate().isAfter(request.getRegistrationEndDate())) {
             throw new BadRequestException("Registration start date must be on or before registration end date");
         }
 
-        if (request.getInternshipStartDate() != null
-                && request.getInternshipEndDate() != null
-                && request.getInternshipStartDate().isAfter(request.getInternshipEndDate())) {
+        if (request.getInternshipStartDate() != null && request.getInternshipEndDate() != null && request.getInternshipStartDate().isAfter(request.getInternshipEndDate())) {
             throw new BadRequestException("Internship start date must be on or before internship end date");
         }
     }

@@ -25,13 +25,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task createTask(
-            Long workPlanId,
-            String title,
-            String description,
-            LocalDate startDate,
-            LocalDate dueDate
-    ) {
+    public Task createTask(Long workPlanId, String title, String description, LocalDate startDate, LocalDate dueDate) {
         Task task = new Task();
 
         task.setWorkPlanId(workPlanId);

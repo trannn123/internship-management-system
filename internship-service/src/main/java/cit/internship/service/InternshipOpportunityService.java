@@ -58,9 +58,7 @@ public class InternshipOpportunityService {
                     .toList();
         }
 
-        return opportunities.stream()
-                .map(this::toResponse)
-                .toList();
+        return opportunities.stream().map(this::toResponse).toList();
     }
 
     public InternshipOpportunityResponse getOpportunityById(Long id) {
@@ -95,17 +93,12 @@ public class InternshipOpportunityService {
     }
 
     @Transactional
-    public InternshipOpportunityResponse updateOpportunity(
-            Long id,
-            InternshipOpportunityRequest request
-    ) {
+    public InternshipOpportunityResponse updateOpportunity(Long id, InternshipOpportunityRequest request) {
         InternshipOpportunity opportunity = requireOpportunity(id);
         Long companyId = currentUserService.getUserId();
 
         if (!opportunity.getCompanyId().equals(companyId)) {
-            throw new ForbiddenException(
-                    "You do not have permission to update this opportunity"
-            );
+            throw new ForbiddenException("You do not have permission to update this opportunity");
         }
 
         // Lưu lại chỉ tiêu ban đầu

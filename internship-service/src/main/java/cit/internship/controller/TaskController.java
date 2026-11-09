@@ -41,36 +41,20 @@ public class TaskController {
     @POST
     @Path("/{workPlanId}")
     @RolesAllowed("COMPANY")
-    public Response createTask(
-            @PathParam("workPlanId") Long workPlanId,
-            @Valid TaskRequest request
-    ) {
+    public Response createTask(@PathParam("workPlanId") Long workPlanId, @Valid TaskRequest request) {
         Long companyId = currentUserService.getUserId();
-
-        WorkPlan workPlan =
-                workPlanService.getWorkPlanById(workPlanId);
+        WorkPlan workPlan = workPlanService.getWorkPlanById(workPlanId);
 
         if (workPlan == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Work plan not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Work plan not found")).build();
         }
 
-        boolean isOwner = internshipService.isCompanyOwner(
-                workPlan.getInternshipId(),
-                companyId
-        );
+        boolean isOwner = internshipService.isCompanyOwner(workPlan.getInternshipId(), companyId);
 
         if (!isOwner) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of(
-                            "status", 403,
-                            "message", "You do not have permission to add tasks to this work plan"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 403, "message", "You do not have permission to add tasks to this work plan")).build();
         }
 
         Task task = taskService.createTask(
@@ -81,39 +65,25 @@ public class TaskController {
                 request.getDueDate()
         );
 
-        return Response.status(Response.Status.CREATED)
-                .entity(task)
-                .build();
+        return Response.status(Response.Status.CREATED).entity(task).build();
     }
 
 
     @GET
     @Path("/work-plan/{workPlanId}")
-    public Response getTasksByWorkPlan(
-            @PathParam("workPlanId") Long workPlanId
-    ) {
-        WorkPlan workPlan =
-                workPlanService.getWorkPlanById(workPlanId);
+    public Response getTasksByWorkPlan(@PathParam("workPlanId") Long workPlanId) {
+        WorkPlan workPlan = workPlanService.getWorkPlanById(workPlanId);
 
         if (workPlan == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Work plan not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Work plan not found")).build();
         }
 
-        Internship internship =
-                internshipService.getInternshipById(workPlan.getInternshipId());
+        Internship internship = internshipService.getInternshipById(workPlan.getInternshipId());
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Internship not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Internship not found")).build();
         }
 
         String role = currentUserService.getRole();
@@ -121,15 +91,10 @@ public class TaskController {
 
         if (!internshipService.canViewInternship(internship, role, userId)) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of(
-                            "status", 403,
-                            "message", "You do not have permission to view tasks in this work plan"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 403, "message", "You do not have permission to view tasks in this work plan")).build();
         }
 
-        List<Task> tasks =
-                taskService.getTasksByWorkPlanId(workPlanId);
+        List<Task> tasks = taskService.getTasksByWorkPlanId(workPlanId);
 
         return Response.ok(tasks).build();
     }
@@ -141,35 +106,21 @@ public class TaskController {
 
         if (task == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Task not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Task not found")).build();
         }
 
-        WorkPlan workPlan =
-                workPlanService.getWorkPlanById(task.getWorkPlanId());
+        WorkPlan workPlan = workPlanService.getWorkPlanById(task.getWorkPlanId());
 
         if (workPlan == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Work plan not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Work plan not found")).build();
         }
 
-        Internship internship =
-                internshipService.getInternshipById(workPlan.getInternshipId());
+        Internship internship = internshipService.getInternshipById(workPlan.getInternshipId());
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Internship not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Internship not found")).build();
         }
 
         String role = currentUserService.getRole();
@@ -177,11 +128,7 @@ public class TaskController {
 
         if (!internshipService.canViewInternship(internship, role, userId)) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of(
-                            "status", 403,
-                            "message", "You do not have permission to view this task"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 403, "message", "You do not have permission to view this task")).build();
         }
 
         return Response.ok(task).build();
@@ -190,53 +137,30 @@ public class TaskController {
     @PUT
     @Path("/{id}/status")
     @RolesAllowed("STUDENT")
-    public Response updateTaskStatus(
-            @PathParam("id") Long id,
-            @Valid TaskStatusRequest request
-    ) {
+    public Response updateTaskStatus(@PathParam("id") Long id, @Valid TaskStatusRequest request) {
         Long studentId = currentUserService.getUserId();
-
         Task task = taskService.getTaskById(id);
 
         if (task == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Task not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Task not found")).build();
         }
 
-        WorkPlan workPlan =
-                workPlanService.getWorkPlanById(task.getWorkPlanId());
+        WorkPlan workPlan = workPlanService.getWorkPlanById(task.getWorkPlanId());
 
         if (workPlan == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Work plan not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Work plan not found")).build();
         }
 
-        boolean isOwner = internshipService.isStudentOwner(
-                workPlan.getInternshipId(),
-                studentId
-        );
+        boolean isOwner = internshipService.isStudentOwner(workPlan.getInternshipId(), studentId);
 
         if (!isOwner) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of(
-                            "status", 403,
-                            "message", "You do not have permission to update this task"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 403, "message", "You do not have permission to update this task")).build();
         }
 
-        Task updatedTask = taskService.updateTaskStatus(
-                id,
-                request.getStatus()
-        );
+        Task updatedTask = taskService.updateTaskStatus(id, request.getStatus());
 
         return Response.ok(updatedTask).build();
     }

@@ -68,7 +68,6 @@ public class InternshipController {
     @GET
     @Path("/{id}")
     public Response getInternshipById(@PathParam("id") Long id) {
-
         Internship internship = internshipService.getInternshipById(id);
 
         if (internship == null) {
@@ -78,19 +77,11 @@ public class InternshipController {
         Long userId = currentUserService.getUserId();
         String role = currentUserService.getRole();
 
-        boolean canView = internshipService.canViewInternship(
-                internship,
-                role,
-                userId
-        );
+        boolean canView = internshipService.canViewInternship(internship, role, userId);
 
         if (!canView) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of(
-                            "status", 403,
-                            "message", "You do not have permission to view this internship"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 403, "message", "You do not have permission to view this internship")).build();
         }
 
         return Response.ok(internship).build();
@@ -99,7 +90,6 @@ public class InternshipController {
     @GET
     @Path("/{id}/period-end-date")
     public Response getInternshipPeriodEndDate(@PathParam("id") Long id) {
-
         Internship internship = internshipService.getInternshipById(id);
 
         if (internship == null) {
@@ -115,41 +105,22 @@ public class InternshipController {
 
         if (internship.getRegistrationId() == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of(
-                            "message", "Internship has no registration"
-                    ))
-                    .build();
+                    .entity(Map.of("message", "Internship has no registration")).build();
         }
 
-        InternshipRegistration registration =
-                internshipRegistrationRepository.findById(
-                        internship.getRegistrationId()
-                );
+        InternshipRegistration registration = internshipRegistrationRepository.findById(internship.getRegistrationId());
 
         if (registration == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "message", "Internship registration not found"
-                    ))
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).entity(Map.of("message", "Internship registration not found")).build();
         }
 
-        InternshipPeriod period =
-                internshipPeriodRepository.findById(
-                        registration.getPeriodId()
-                );
+        InternshipPeriod period = internshipPeriodRepository.findById(registration.getPeriodId());
 
         if (period == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "message", "Internship period not found"
-                    ))
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).entity(Map.of("message", "Internship period not found")).build();
         }
 
-        return Response.ok(
-                Map.of("internshipEndDate", period.getInternshipEndDate())
-        ).build();
+        return Response.ok(Map.of("internshipEndDate", period.getInternshipEndDate())).build();
     }
 
     @POST
@@ -157,44 +128,28 @@ public class InternshipController {
     public Response createInternship(@Valid InternshipRequest request) {
         if (request.getStudentId() == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of(
-                            "status", 400,
-                            "message", "studentId is required for admin-created internships"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 400, "message", "studentId is required for admin-created internships")).build();
         }
 
         if (request.getCompanyId() == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of(
-                            "status", 400,
-                            "message", "companyId is required"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 400, "message", "companyId is required")).build();
         }
 
         if (request.getLecturerId() == null) {
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(Map.of(
-                            "status", 400,
-                            "message", "lecturerId is required"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 400, "message", "lecturerId is required")).build();
         }
 
-        Internship internship =
-                internshipService.createInternship(request, request.getStudentId());
+        Internship internship = internshipService.createInternship(request, request.getStudentId());
 
-        return Response.status(Response.Status.CREATED)
-                .entity(internship)
-                .build();
+        return Response.status(Response.Status.CREATED).entity(internship).build();
     }
 
     @PUT
     @Path("/{id}/approve-company")
     @RolesAllowed("COMPANY")
     public Response approveByCompany(@PathParam("id") Long id) {
-
         Long companyId = currentUserService.getUserId();
 
         Internship internship = internshipService.approveByCompany(id, companyId);
@@ -210,11 +165,9 @@ public class InternshipController {
     @Path("/{id}/reject-company")
     @RolesAllowed("COMPANY")
     public Response rejectByCompany(@PathParam("id") Long id) {
-
         Long companyId = currentUserService.getUserId();
 
-        Internship internship =
-                internshipService.rejectByCompany(id, companyId);
+        Internship internship = internshipService.rejectByCompany(id, companyId);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -227,11 +180,9 @@ public class InternshipController {
     @Path("/{id}/approve-lecturer")
     @RolesAllowed("LECTURER")
     public Response approveByLecturer(@PathParam("id") Long id) {
-
         Long lecturerId = currentUserService.getUserId();
 
-        Internship internship =
-                internshipService.approveByLecturer(id, lecturerId);
+        Internship internship = internshipService.approveByLecturer(id, lecturerId);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -244,11 +195,9 @@ public class InternshipController {
     @Path("/{id}/reject-lecturer")
     @RolesAllowed("LECTURER")
     public Response rejectByLecturer(@PathParam("id") Long id) {
-
         Long lecturerId = currentUserService.getUserId();
 
-        Internship internship =
-                internshipService.rejectByLecturer(id, lecturerId);
+        Internship internship = internshipService.rejectByLecturer(id, lecturerId);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
@@ -271,17 +220,13 @@ public class InternshipController {
         }
 
         if (internship.getCompanyId() == null || !internship.getCompanyId().equals(companyId)) {
-            throw new ForbiddenException(
-                    "You do not have permission to complete this internship"
-            );
+            throw new ForbiddenException("You do not have permission to complete this internship");
         }
 
         if (internship.getRegistrationId() != null) {
             internshipRegistrationService.completeByCompanyEvaluation(id, companyId);
         } else {
-            throw new BadRequestException(
-                    "Completion of internships without registration is not supported yet"
-            );
+            throw new BadRequestException("Completion of internships without registration is not supported yet");
         }
 
         Internship updatedInternship = internshipService.getInternshipById(id);
@@ -302,19 +247,13 @@ public class InternshipController {
         }
 
         if (internship.getLecturerId() == null || !internship.getLecturerId().equals(lecturerId)) {
-            throw new ForbiddenException(
-                    "You do not have permission to complete this internship"
-            );
+            throw new ForbiddenException("You do not have permission to complete this internship");
         }
 
         if (internship.getRegistrationId() != null) {
-            internshipRegistrationService.completeRegistration(
-                    internship.getRegistrationId()
-            );
+            internshipRegistrationService.completeRegistration(internship.getRegistrationId());
         } else {
-            throw new BadRequestException(
-                    "Completion of internships without registration is not supported yet"
-            );
+            throw new BadRequestException("Completion of internships without registration is not supported yet");
         }
 
         Internship updatedInternship = internshipService.getInternshipById(id);
@@ -325,11 +264,8 @@ public class InternshipController {
     @Path("/me/student")
     @RolesAllowed("STUDENT")
     public Response getMyInternships() {
-
         Long studentId = currentUserService.getUserId();
-
         List<Internship> internships = internshipService.getInternshipByStudentId(studentId);
-
         return Response.ok(internships).build();
     }
 
@@ -338,9 +274,7 @@ public class InternshipController {
     @RolesAllowed("COMPANY")
     public Response getMyCompanyInternships() {
         Long companyId = currentUserService.getUserId();
-
         List<Internship> internships = internshipService.getInternshipsByCompanyId(companyId);
-
         return Response.ok(internships).build();
     }
 
@@ -349,10 +283,7 @@ public class InternshipController {
     @RolesAllowed("LECTURER")
     public Response getMyLecturerInternships() {
         Long lecturerId = currentUserService.getUserId();
-
         List<Internship> internships = internshipService.getInternshipsByLecturerId(lecturerId);
-
         return Response.ok(internships).build();
     }
-
 }

@@ -32,58 +32,40 @@ public class InternshipLogController {
     @POST
     @Path("/{internshipId}")
     @RolesAllowed("STUDENT")
-    public Response createLog(
-            @PathParam("internshipId") Long internshipId,
-            @Valid InternshipLogRequest request
-    ) {
+    public Response createLog(@PathParam("internshipId") Long internshipId, @Valid InternshipLogRequest request) {
         Long studentId = currentUserService.getUserId();
-
         Internship internship = internshipService.getInternshipById(internshipId);
 
         if (internship == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("{\"message\":\"Internship not found\"}")
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Internship not found\"}").build();
         }
 
         if (!internship.getStudentId().equals(studentId)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity("{\"message\":\"You do not have permission\"}")
-                    .build();
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"You do not have permission\"}").build();
         }
 
-        InternshipLog log =
-                internshipLogService.createLog(internshipId, request);
+        InternshipLog log = internshipLogService.createLog(internshipId, request);
 
-        return Response.status(Response.Status.CREATED)
-                .entity(log)
-                .build();
+        return Response.status(Response.Status.CREATED).entity(log).build();
     }
 
     @GET
     @Path("/{internshipId}")
     @RolesAllowed("STUDENT")
-    public Response getLogs(
-            @PathParam("internshipId") Long internshipId
-    ) {
+    public Response getLogs(@PathParam("internshipId") Long internshipId) {
         Long studentId = currentUserService.getUserId();
 
         Internship internship = internshipService.getInternshipById(internshipId);
 
         if (internship == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("{\"message\":\"Internship not found\"}")
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Internship not found\"}").build();
         }
 
         if (!internship.getStudentId().equals(studentId)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity("{\"message\":\"You do not have permission\"}")
-                    .build();
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"You do not have permission\"}").build();
         }
 
-        List<InternshipLog> logs =
-                internshipLogService.getLogsByInternshipId(internshipId);
+        List<InternshipLog> logs = internshipLogService.getLogsByInternshipId(internshipId);
 
         return Response.ok(logs).build();
     }
@@ -91,28 +73,20 @@ public class InternshipLogController {
     @GET
     @Path("/company/{internshipId}")
     @RolesAllowed("COMPANY")
-    public Response getLogsForCompany(
-            @PathParam("internshipId") Long internshipId
-    ) {
+    public Response getLogsForCompany(@PathParam("internshipId") Long internshipId) {
         Long companyId = currentUserService.getUserId();
 
         Internship internship = internshipService.getInternshipById(internshipId);
 
         if (internship == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("{\"message\":\"Internship not found\"}")
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Internship not found\"}").build();
         }
 
-        if (internship.getCompanyId() == null
-                || !internship.getCompanyId().equals(companyId)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity("{\"message\":\"You do not have permission\"}")
-                    .build();
+        if (internship.getCompanyId() == null || !internship.getCompanyId().equals(companyId)) {
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"You do not have permission\"}").build();
         }
 
-        List<InternshipLog> logs =
-                internshipLogService.getLogsByInternshipId(internshipId);
+        List<InternshipLog> logs = internshipLogService.getLogsByInternshipId(internshipId);
 
         return Response.ok(logs).build();
     }
@@ -121,28 +95,20 @@ public class InternshipLogController {
     @GET
     @Path("/lecturer/{internshipId}")
     @RolesAllowed("LECTURER")
-    public Response getLogsForLecturer(
-            @PathParam("internshipId") Long internshipId
-    ) {
+    public Response getLogsForLecturer(@PathParam("internshipId") Long internshipId) {
         Long lecturerId = currentUserService.getUserId();
 
         Internship internship = internshipService.getInternshipById(internshipId);
 
         if (internship == null) {
-            return Response.status(Response.Status.NOT_FOUND)
-                    .entity("{\"message\":\"Internship not found\"}")
-                    .build();
+            return Response.status(Response.Status.NOT_FOUND).entity("{\"message\":\"Internship not found\"}").build();
         }
 
-        if (internship.getLecturerId() == null
-                || !internship.getLecturerId().equals(lecturerId)) {
-            return Response.status(Response.Status.FORBIDDEN)
-                    .entity("{\"message\":\"You do not have permission\"}")
-                    .build();
+        if (internship.getLecturerId() == null || !internship.getLecturerId().equals(lecturerId)) {
+            return Response.status(Response.Status.FORBIDDEN).entity("{\"message\":\"You do not have permission\"}").build();
         }
 
-        List<InternshipLog> logs =
-                internshipLogService.getLogsByInternshipId(internshipId);
+        List<InternshipLog> logs = internshipLogService.getLogsByInternshipId(internshipId);
 
         return Response.ok(logs).build();
     }

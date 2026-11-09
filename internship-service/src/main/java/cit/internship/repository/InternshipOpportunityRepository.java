@@ -19,8 +19,6 @@ public class InternshipOpportunityRepository implements PanacheRepository<Intern
     }
 
     public Optional<InternshipOpportunity> findByIdForUpdate(Long id) {
-        return find("id", id)
-                .withLock(LockModeType.PESSIMISTIC_WRITE)
-                .firstResultOptional();
+        return find("id", id).withLock(LockModeType.PESSIMISTIC_WRITE).firstResultOptional();
     }
 }

@@ -21,17 +21,9 @@ public class WorkPlanService {
     }
 
     @Transactional
-    public WorkPlan createWorkPlan(
-            Long internshipId,
-            String title,
-            String description,
-            java.time.LocalDate startDate,
-            java.time.LocalDate endDate
-    ) {
+    public WorkPlan createWorkPlan(Long internshipId, String title, String description, java.time.LocalDate startDate, java.time.LocalDate endDate) {
         if (workPlanRepository.findByInternshipId(internshipId) != null) {
-            throw new IllegalArgumentException(
-                    "A work plan already exists for this internship"
-            );
+            throw new IllegalArgumentException("A work plan already exists for this internship");
         }
 
         WorkPlan workPlan = new WorkPlan();

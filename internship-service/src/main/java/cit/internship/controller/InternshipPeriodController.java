@@ -37,9 +37,7 @@ public class InternshipPeriodController {
     @POST
     @RolesAllowed("ADMIN")
     public Response createPeriod(@Valid InternshipPeriodRequest request) {
-        return Response.status(Response.Status.CREATED)
-                .entity(internshipPeriodService.createPeriod(request))
-                .build();
+        return Response.status(Response.Status.CREATED).entity(internshipPeriodService.createPeriod(request)).build();
     }
 
     @PUT
@@ -67,22 +65,14 @@ public class InternshipPeriodController {
     @POST
     @Path("/{periodId}/lecturers")
     @RolesAllowed("ADMIN")
-    public Response assignLecturer(
-            @PathParam("periodId") Long periodId,
-            @Valid AssignLecturerRequest request
-    ) {
-        return Response.status(Response.Status.CREATED)
-                .entity(internshipPeriodService.assignLecturer(periodId, request))
-                .build();
+    public Response assignLecturer(@PathParam("periodId") Long periodId, @Valid AssignLecturerRequest request) {
+        return Response.status(Response.Status.CREATED).entity(internshipPeriodService.assignLecturer(periodId, request)).build();
     }
 
     @DELETE
     @Path("/{periodId}/lecturers/{lecturerId}")
     @RolesAllowed("ADMIN")
-    public Response removeAssignedLecturer(
-            @PathParam("periodId") Long periodId,
-            @PathParam("lecturerId") Long lecturerId
-    ) {
+    public Response removeAssignedLecturer(@PathParam("periodId") Long periodId, @PathParam("lecturerId") Long lecturerId) {
         internshipPeriodService.removeAssignedLecturer(periodId, lecturerId);
         return Response.noContent().build();
     }

@@ -34,32 +34,19 @@ public class WorkPlanController {
     @POST
     @Path("/{internshipId}")
     @RolesAllowed("COMPANY")
-    public Response createWorkPlan(
-            @PathParam("internshipId") Long internshipId,
-            @Valid WorkPlanRequest request
-    ) {
+    public Response createWorkPlan(@PathParam("internshipId") Long internshipId, @Valid WorkPlanRequest request) {
         Long companyId = currentUserService.getUserId();
 
-        Internship internship =
-                internshipService.getInternshipById(internshipId);
+        Internship internship = internshipService.getInternshipById(internshipId);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Internship not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Internship not found")).build();
         }
 
-        if (internship.getCompanyId() == null
-                || !internship.getCompanyId().equals(companyId)) {
+        if (internship.getCompanyId() == null || !internship.getCompanyId().equals(companyId)) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of(
-                            "status", 403,
-                            "message", "You do not have permission to create a work plan for this internship"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 403, "message", "You do not have permission to create a work plan for this internship")).build();
         }
 
         WorkPlan workPlan = workPlanService.createWorkPlan(
@@ -70,26 +57,17 @@ public class WorkPlanController {
                 request.getEndDate()
         );
 
-        return Response.status(Response.Status.CREATED)
-                .entity(workPlan)
-                .build();
+        return Response.status(Response.Status.CREATED).entity(workPlan).build();
     }
 
     @GET
     @Path("/{internshipId}")
-    public Response getWorkPlan(
-            @PathParam("internshipId") Long internshipId
-    ) {
-        Internship internship =
-                internshipService.getInternshipById(internshipId);
+    public Response getWorkPlan(@PathParam("internshipId") Long internshipId) {
+        Internship internship = internshipService.getInternshipById(internshipId);
 
         if (internship == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Internship not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Internship not found")).build();
         }
 
         String role = currentUserService.getRole();
@@ -97,23 +75,14 @@ public class WorkPlanController {
 
         if (!internshipService.canViewInternship(internship, role, userId)) {
             return Response.status(Response.Status.FORBIDDEN)
-                    .entity(Map.of(
-                            "status", 403,
-                            "message", "You do not have permission to view this work plan"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 403, "message", "You do not have permission to view this work plan")).build();
         }
 
-        WorkPlan workPlan =
-                workPlanService.getWorkPlanByInternshipId(internshipId);
+        WorkPlan workPlan = workPlanService.getWorkPlanByInternshipId(internshipId);
 
         if (workPlan == null) {
             return Response.status(Response.Status.NOT_FOUND)
-                    .entity(Map.of(
-                            "status", 404,
-                            "message", "Work plan not found"
-                    ))
-                    .build();
+                    .entity(Map.of("status", 404, "message", "Work plan not found")).build();
         }
 
         return Response.ok(workPlan).build();

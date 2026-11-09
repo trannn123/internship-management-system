@@ -85,12 +85,9 @@ public class InternshipRegistrationService {
     @Transactional
     public InternshipRegistrationResponse createRegistration(InternshipRegistrationRequest request) {
         Long studentId = currentUserService.getUserId();
-        InternshipOpportunity opportunity =
-                internshipOpportunityRepository
-                        .findByIdForUpdate(request.getOpportunityId())
-                        .orElseThrow(() ->
-                                new NotFoundException("Opportunity not found")
-                        );
+        InternshipOpportunity opportunity = internshipOpportunityRepository
+                .findByIdForUpdate(request.getOpportunityId())
+                .orElseThrow(() -> new NotFoundException("Opportunity not found"));
 
         InternshipPeriod period = internshipPeriodService.getPeriodEntityById(opportunity.getPeriodId());
 
@@ -99,13 +96,10 @@ public class InternshipRegistrationService {
         }
 
         if (opportunity.getQuantity() != null) {
-            long acceptedCount = internshipRegistrationRepository
-                    .countAcceptedByOpportunityId(opportunity.getId());
+            long acceptedCount = internshipRegistrationRepository.countAcceptedByOpportunityId(opportunity.getId());
 
             if (acceptedCount >= opportunity.getQuantity()) {
-                throw new BadRequestException(
-                        "Cơ hội thực tập này đã đủ số lượng sinh viên."
-                );
+                throw new BadRequestException("Cơ hội thực tập này đã đủ số lượng sinh viên.");
             }
         }
 
@@ -117,8 +111,7 @@ public class InternshipRegistrationService {
             throw new BadRequestException("You have already registered for this opportunity");
         }
 
-        List<InternshipRegistration> existingRegistrations =
-                internshipRegistrationRepository.findByStudentId(studentId);
+        List<InternshipRegistration> existingRegistrations = internshipRegistrationRepository.findByStudentId(studentId);
 
         boolean hasRegistrationInSamePeriod = existingRegistrations.stream()
                 .anyMatch(existing ->
@@ -129,12 +122,7 @@ public class InternshipRegistrationService {
 
         if (hasRegistrationInSamePeriod) {
             throw new WebApplicationException(
-                    Response.status(Response.Status.BAD_REQUEST)
-                            .type("application/json")
-                            .entity(
-                                    "{\"message\":\"Bạn đã có hồ sơ đăng ký hoặc đang thực tập trong kỳ này. Không thể đăng ký thêm vị trí khác.\"}"
-                            )
-                            .build()
+                    Response.status(Response.Status.BAD_REQUEST).type("application/json").entity("{\"message\":\"Bạn đã có hồ sơ đăng ký hoặc đang thực tập trong kỳ này. Không thể đăng ký thêm vị trí khác.\"}").build()
             );
         }
 
@@ -224,28 +212,19 @@ public class InternshipRegistrationService {
             throw new WebApplicationException(
                     Response.status(Response.Status.BAD_REQUEST)
                             .type("application/json")
-                            .entity(
-                                    "{\"message\":\"Sinh viên đã có hồ sơ thực tập được duyệt trong kỳ này. Không thể duyệt thêm hồ sơ khác.\"}"
-                            )
-                            .build()
+                            .entity("{\"message\":\"Sinh viên đã có hồ sơ thực tập được duyệt trong kỳ này. Không thể duyệt thêm hồ sơ khác.\"}").build()
             );
         }
 
-        InternshipOpportunity opportunity =
-                internshipOpportunityRepository
-                        .findByIdForUpdate(registration.getOpportunityId())
-                        .orElseThrow(() ->
-                                new NotFoundException("Opportunity not found")
-                        );
+        InternshipOpportunity opportunity = internshipOpportunityRepository
+                .findByIdForUpdate(registration.getOpportunityId())
+                .orElseThrow(() -> new NotFoundException("Opportunity not found"));
 
         if (opportunity.getQuantity() != null) {
-            long acceptedCount = internshipRegistrationRepository
-                    .countAcceptedByOpportunityId(opportunity.getId());
+            long acceptedCount = internshipRegistrationRepository.countAcceptedByOpportunityId(opportunity.getId());
 
             if (acceptedCount >= opportunity.getQuantity()) {
-                throw new BadRequestException(
-                        "Cơ hội thực tập này đã đủ số lượng sinh viên. Không thể duyệt thêm."
-                );
+                throw new BadRequestException("Cơ hội thực tập này đã đủ số lượng sinh viên. Không thể duyệt thêm.");
             }
         }
 
@@ -308,15 +287,11 @@ public class InternshipRegistrationService {
         }
 
         if (evaluationExistence == null || !evaluationExistence.isCompanyEvaluationExists()) {
-            throw new BadRequestException(
-                    "Company evaluation must exist before completing the internship by company"
-            );
+            throw new BadRequestException("Company evaluation must exist before completing the internship by company");
         }
 
         if (registration.getStatus() != RegistrationStatus.IN_PROGRESS) {
-            throw new BadRequestException(
-                    "Only internships in IN_PROGRESS status can be completed by company"
-            );
+            throw new BadRequestException("Only internships in IN_PROGRESS status can be completed by company");
         }
 
         registration.setStatus(RegistrationStatus.COMPLETED_COMPANY);
@@ -330,9 +305,7 @@ public class InternshipRegistrationService {
         enforceCompletionAccess(registration);
 
         if (registration.getStatus() != RegistrationStatus.COMPLETED_COMPANY) {
-            throw new BadRequestException(
-                    "Company must complete the internship before final completion"
-            );
+            throw new BadRequestException("Company must complete the internship before final completion");
         }
 
         Internship internship = internshipService.getInternshipByRegistrationId(registration.getId());
@@ -408,19 +381,14 @@ public class InternshipRegistrationService {
         if ("LECTURER".equals(role)) {
             Long currentUserId = currentUserService.getUserId();
 
-            if (registration.getLecturerId() == null
-                    || !registration.getLecturerId().equals(currentUserId)) {
-                throw new ForbiddenException(
-                        "You do not have permission to complete this registration"
-                );
+            if (registration.getLecturerId() == null || !registration.getLecturerId().equals(currentUserId)) {
+                throw new ForbiddenException("You do not have permission to complete this registration");
             }
 
             return;
         }
 
-        throw new ForbiddenException(
-                "Only the assigned lecturer or an administrator can complete this registration"
-        );
+        throw new ForbiddenException("Only the assigned lecturer or an administrator can complete this registration");
     }
 
     private void ensureEvaluationsExist(Long internshipId) {

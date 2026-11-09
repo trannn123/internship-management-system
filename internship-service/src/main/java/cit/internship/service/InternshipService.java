@@ -42,10 +42,7 @@ public class InternshipService {
         return internshipRepository.findByLecturerId(lecturerId);
     }
 
-    public boolean canViewInternship(
-            Internship internship,
-            String role,
-            Long userId) {
+    public boolean canViewInternship(Internship internship, String role, Long userId) {
 
         if (internship == null) {
             return false;
@@ -73,7 +70,6 @@ public class InternshipService {
 
     @Transactional
     public Internship createInternship(InternshipRequest request, Long studentId) {
-
         Internship internship = new Internship();
 
         internship.setStudentId(studentId);
@@ -85,15 +81,11 @@ public class InternshipService {
         internship.setEndDate(request.getEndDate());
 
         if (request.getCompanyId() == null) {
-            throw new jakarta.ws.rs.BadRequestException(
-                    "companyId is required"
-            );
+            throw new jakarta.ws.rs.BadRequestException("companyId is required");
         }
 
         if (request.getLecturerId() == null) {
-            throw new jakarta.ws.rs.BadRequestException(
-                    "lecturerId is required"
-            );
+            throw new jakarta.ws.rs.BadRequestException("lecturerId is required");
         }
 
         internship.setStatus(InternshipStatus.PENDING_COMPANY);
@@ -104,11 +96,7 @@ public class InternshipService {
     }
 
     @Transactional
-    public Internship createOrReuseFromRegistration(
-            InternshipRegistration registration,
-            InternshipOpportunity opportunity,
-            InternshipPeriod period
-    ) {
+    public Internship createOrReuseFromRegistration(InternshipRegistration registration, InternshipOpportunity opportunity, InternshipPeriod period) {
         Internship internship = internshipRepository.findByRegistrationId(registration.getId());
         boolean isNew = internship == null;
 
@@ -142,15 +130,11 @@ public class InternshipService {
         }
 
         if (internship.getStatus() != InternshipStatus.PENDING_COMPANY) {
-            throw new IllegalArgumentException(
-                    "Internship is not waiting for company approval"
-            );
+            throw new IllegalArgumentException("Internship is not waiting for company approval");
         }
 
         if (internship.getCompanyId() == null || !internship.getCompanyId().equals(companyId)) {
-            throw new jakarta.ws.rs.ForbiddenException(
-                    "You do not have permission to approve this internship"
-            );
+            throw new jakarta.ws.rs.ForbiddenException("You do not have permission to approve this internship");
         }
 
         internship.setStatus(InternshipStatus.PENDING_LECTURER);
@@ -167,15 +151,11 @@ public class InternshipService {
         }
 
         if (internship.getStatus() != InternshipStatus.PENDING_COMPANY) {
-            throw new IllegalArgumentException(
-                    "Internship is not waiting for company approval"
-            );
+            throw new IllegalArgumentException("Internship is not waiting for company approval");
         }
 
         if (internship.getCompanyId() == null || !internship.getCompanyId().equals(companyId)) {
-            throw new jakarta.ws.rs.ForbiddenException(
-                    "You do not have permission to reject this internship"
-            );
+            throw new jakarta.ws.rs.ForbiddenException("You do not have permission to reject this internship");
         }
 
         internship.setStatus(InternshipStatus.REJECTED_COMPANY);
@@ -192,15 +172,11 @@ public class InternshipService {
         }
 
         if (internship.getStatus() != InternshipStatus.PENDING_LECTURER) {
-            throw new IllegalArgumentException(
-                    "Internship is not waiting for lecturer approval"
-            );
+            throw new IllegalArgumentException("Internship is not waiting for lecturer approval");
         }
 
         if (internship.getLecturerId() == null || !internship.getLecturerId().equals(lecturerId)) {
-            throw new jakarta.ws.rs.ForbiddenException(
-                    "You do not have permission to approve this internship"
-            );
+            throw new jakarta.ws.rs.ForbiddenException("You do not have permission to approve this internship");
         }
 
         internship.setStatus(InternshipStatus.IN_PROGRESS);
@@ -217,15 +193,11 @@ public class InternshipService {
         }
 
         if (internship.getStatus() != InternshipStatus.PENDING_LECTURER) {
-            throw new IllegalArgumentException(
-                    "Internship is not waiting for lecturer approval"
-            );
+            throw new IllegalArgumentException("Internship is not waiting for lecturer approval");
         }
 
         if (internship.getLecturerId() == null || !internship.getLecturerId().equals(lecturerId)) {
-            throw new jakarta.ws.rs.ForbiddenException(
-                    "You do not have permission to reject this internship"
-            );
+            throw new jakarta.ws.rs.ForbiddenException("You do not have permission to reject this internship");
         }
 
         internship.setStatus(InternshipStatus.REJECTED_LECTURER);
@@ -240,8 +212,7 @@ public class InternshipService {
             return false;
         }
 
-        return internship.getCompanyId() != null
-                && internship.getCompanyId().equals(companyId);
+        return internship.getCompanyId() != null && internship.getCompanyId().equals(companyId);
     }
 
     public boolean isStudentOwner(Long internshipId, Long studentId) {
@@ -251,8 +222,7 @@ public class InternshipService {
             return false;
         }
 
-        return internship.getStudentId() != null
-                && internship.getStudentId().equals(studentId);
+        return internship.getStudentId() != null && internship.getStudentId().equals(studentId);
     }
 
 }

@@ -37,9 +37,7 @@ public class InternshipRegistrationController {
     @POST
     @RolesAllowed("STUDENT")
     public Response createRegistration(@Valid InternshipRegistrationRequest request) {
-        return Response.status(Response.Status.CREATED)
-                .entity(internshipRegistrationService.createRegistration(request))
-                .build();
+        return Response.status(Response.Status.CREATED).entity(internshipRegistrationService.createRegistration(request)).build();
     }
 
     @PUT
@@ -82,8 +80,6 @@ public class InternshipRegistrationController {
     @RolesAllowed("COMPANY")
     public Response completeByCompanyEvaluation(@PathParam("internshipId") Long internshipId) {
         Long companyId = currentUserService.getUserId();
-        return Response.ok(
-                internshipRegistrationService.completeByCompanyEvaluation(internshipId, companyId)
-        ).build();
+        return Response.ok(internshipRegistrationService.completeByCompanyEvaluation(internshipId, companyId)).build();
     }
 }

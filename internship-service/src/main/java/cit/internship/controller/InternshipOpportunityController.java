@@ -33,18 +33,13 @@ public class InternshipOpportunityController {
     @POST
     @RolesAllowed("COMPANY")
     public Response createOpportunity(@Valid InternshipOpportunityRequest request) {
-        return Response.status(Response.Status.CREATED)
-                .entity(internshipOpportunityService.createOpportunity(request))
-                .build();
+        return Response.status(Response.Status.CREATED).entity(internshipOpportunityService.createOpportunity(request)).build();
     }
 
     @PUT
     @Path("/{id}")
     @RolesAllowed("COMPANY")
-    public Response updateOpportunity(
-            @PathParam("id") Long id,
-            @Valid InternshipOpportunityRequest request
-    ) {
+    public Response updateOpportunity(@PathParam("id") Long id, @Valid InternshipOpportunityRequest request) {
         return Response.ok(internshipOpportunityService.updateOpportunity(id, request)).build();
     }
 }
