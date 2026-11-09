@@ -118,6 +118,8 @@ function OpportunityFormPage() {
 
     return periods.filter((period) => {
       const isWithinRegistrationDates =
+        period.registrationStartDate != null &&
+        period.registrationEndDate != null &&
         period.registrationStartDate <= today &&
         period.registrationEndDate >= today;
 

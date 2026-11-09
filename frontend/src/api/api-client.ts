@@ -28,6 +28,36 @@ async function buildErrorMessage(response: Response) {
   }
 }
 
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function fetchWithRetry(
+  url: string,
+  options: RequestInit,
+): Promise<Response> {
+  const method = (options.method ?? "GET").toUpperCase();
+  const maxAttempts = method === "GET" ? 31 : 1;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fetch(url, options);
+    } catch (error) {
+      if (
+        !(error instanceof TypeError) ||
+        attempt === maxAttempts ||
+        options.signal?.aborted
+      ) {
+        throw error;
+      }
+
+      await sleep(2000);
+    }
+  }
+
+  throw new Error("Không thể kết nối đến máy chủ.");
+}
+
 export async function apiFetch<T>(
   baseUrl: string,
   path: string,
@@ -51,10 +81,22 @@ export async function apiFetch<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const response = await fetch(`${baseUrl}${path}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+
+  try {
+    response = await fetchWithRetry(`${baseUrl}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Máy chủ chưa sẵn sàng. Vui lòng thử lại sau ít phút.",
+      );
+    }
+
+    throw error;
+  }
 
   if (!response.ok) {
     throw new Error(await buildErrorMessage(response));

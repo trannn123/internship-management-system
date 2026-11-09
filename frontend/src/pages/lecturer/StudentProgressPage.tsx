@@ -6,7 +6,6 @@ import {
   getLecturerEvaluation,
 } from "../../api/evaluation-api";
 import {
-  getInternshipById,
   getInternshipLogsForLecturer,
   getMyInternships,
   getTasksByWorkPlanId,
